@@ -1,4 +1,4 @@
-grammar Pseudo++;
+grammar Pseudo;
 
 program: statement* EOF;
 
