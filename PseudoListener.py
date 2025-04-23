@@ -35,12 +35,93 @@ class PseudoListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by PseudoParser#assignStatement.
-    def enterAssignStatement(self, ctx:PseudoParser.AssignStatementContext):
+    # Enter a parse tree produced by PseudoParser#varDeclStatement.
+    def enterVarDeclStatement(self, ctx:PseudoParser.VarDeclStatementContext):
         pass
 
-    # Exit a parse tree produced by PseudoParser#assignStatement.
-    def exitAssignStatement(self, ctx:PseudoParser.AssignStatementContext):
+    # Exit a parse tree produced by PseudoParser#varDeclStatement.
+    def exitVarDeclStatement(self, ctx:PseudoParser.VarDeclStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by PseudoParser#assignmentStatement.
+    def enterAssignmentStatement(self, ctx:PseudoParser.AssignmentStatementContext):
+        pass
+
+    # Exit a parse tree produced by PseudoParser#assignmentStatement.
+    def exitAssignmentStatement(self, ctx:PseudoParser.AssignmentStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by PseudoParser#ifStatement.
+    def enterIfStatement(self, ctx:PseudoParser.IfStatementContext):
+        pass
+
+    # Exit a parse tree produced by PseudoParser#ifStatement.
+    def exitIfStatement(self, ctx:PseudoParser.IfStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by PseudoParser#whileStatement.
+    def enterWhileStatement(self, ctx:PseudoParser.WhileStatementContext):
+        pass
+
+    # Exit a parse tree produced by PseudoParser#whileStatement.
+    def exitWhileStatement(self, ctx:PseudoParser.WhileStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by PseudoParser#forStatement.
+    def enterForStatement(self, ctx:PseudoParser.ForStatementContext):
+        pass
+
+    # Exit a parse tree produced by PseudoParser#forStatement.
+    def exitForStatement(self, ctx:PseudoParser.ForStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by PseudoParser#functionDefStatement.
+    def enterFunctionDefStatement(self, ctx:PseudoParser.FunctionDefStatementContext):
+        pass
+
+    # Exit a parse tree produced by PseudoParser#functionDefStatement.
+    def exitFunctionDefStatement(self, ctx:PseudoParser.FunctionDefStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by PseudoParser#paramList.
+    def enterParamList(self, ctx:PseudoParser.ParamListContext):
+        pass
+
+    # Exit a parse tree produced by PseudoParser#paramList.
+    def exitParamList(self, ctx:PseudoParser.ParamListContext):
+        pass
+
+
+    # Enter a parse tree produced by PseudoParser#functionCallStatement.
+    def enterFunctionCallStatement(self, ctx:PseudoParser.FunctionCallStatementContext):
+        pass
+
+    # Exit a parse tree produced by PseudoParser#functionCallStatement.
+    def exitFunctionCallStatement(self, ctx:PseudoParser.FunctionCallStatementContext):
+        pass
+
+
+    # Enter a parse tree produced by PseudoParser#argumentList.
+    def enterArgumentList(self, ctx:PseudoParser.ArgumentListContext):
+        pass
+
+    # Exit a parse tree produced by PseudoParser#argumentList.
+    def exitArgumentList(self, ctx:PseudoParser.ArgumentListContext):
+        pass
+
+
+    # Enter a parse tree produced by PseudoParser#body.
+    def enterBody(self, ctx:PseudoParser.BodyContext):
+        pass
+
+    # Exit a parse tree produced by PseudoParser#body.
+    def exitBody(self, ctx:PseudoParser.BodyContext):
         pass
 
 

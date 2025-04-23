@@ -3,13 +3,17 @@ from PseudoVisitor import PseudoVisitor
 from PseudoLexer import PseudoLexer
 from PseudoParser import PseudoParser
 from PseudoListener import PseudoListener
+import re
 
 class PseudoInterpreter(PseudoVisitor):
     def __init__(self):
         self.variables = {}
     
     def visitPrintStatement(self, ctx):
-        print(ctx.STRING().getText().strip('"'))
+        text = ctx.STRING().getText()
+        text = text[1:len(text)-1]
+        text = re.sub(r'\\(.)', r'\1', text)
+        print(text)
 
 def run_interpreter(input_text):
     lexer = PseudoLexer(InputStream(input_text))
@@ -20,8 +24,8 @@ def run_interpreter(input_text):
     interpreter = PseudoInterpreter()
     interpreter.visit(tree)
 
-code = '''
-print("Hello, World!")
+code = r'''
+shout("Hello, \"World!\"");
 '''
 
 run_interpreter(code)

@@ -24,8 +24,53 @@ class PseudoVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by PseudoParser#assignStatement.
-    def visitAssignStatement(self, ctx:PseudoParser.AssignStatementContext):
+    # Visit a parse tree produced by PseudoParser#varDeclStatement.
+    def visitVarDeclStatement(self, ctx:PseudoParser.VarDeclStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by PseudoParser#assignmentStatement.
+    def visitAssignmentStatement(self, ctx:PseudoParser.AssignmentStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by PseudoParser#ifStatement.
+    def visitIfStatement(self, ctx:PseudoParser.IfStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by PseudoParser#whileStatement.
+    def visitWhileStatement(self, ctx:PseudoParser.WhileStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by PseudoParser#forStatement.
+    def visitForStatement(self, ctx:PseudoParser.ForStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by PseudoParser#functionDefStatement.
+    def visitFunctionDefStatement(self, ctx:PseudoParser.FunctionDefStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by PseudoParser#paramList.
+    def visitParamList(self, ctx:PseudoParser.ParamListContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by PseudoParser#functionCallStatement.
+    def visitFunctionCallStatement(self, ctx:PseudoParser.FunctionCallStatementContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by PseudoParser#argumentList.
+    def visitArgumentList(self, ctx:PseudoParser.ArgumentListContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by PseudoParser#body.
+    def visitBody(self, ctx:PseudoParser.BodyContext):
         return self.visitChildren(ctx)
 
 
