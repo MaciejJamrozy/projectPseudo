@@ -70,7 +70,32 @@ class PseudoInterpreter(PseudoVisitor):
                 throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, type(right_value).__name__)
         #TODO
         # tutaj trzeba napisać takie ify na wzór tych wyzej, zeby obsluzyc typ bool
-        
+
+
+        elif ctx.op and ctx.op.tpye = PseudoParser.AND:
+            left_value = self.visit(ctx.expr(0))
+            right_value = self.visit(ctx.expr(1))
+            if isinstance(left_value, bool) and isinstance(right_value, bool):
+                return left_value and right_value
+            else:
+                throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value._name_, type(right_value)._name_)
+                
+        elif ctx.op and ctx.op.tpye = PseudoParser.OR:
+            left_value = self.visit(ctx.expr(0))
+            right_value = self.visit(ctx.expr(1))
+            if isinstance(left_value, bool) and isinstance(right_value, bool):
+                return left_value or right_value
+            else:
+                throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value._name_, type(right_value)._name_)
+                                        
+
+        elif ctx.op and ctx.op.tpye = PseudoParser.NOT:
+            value = self.visit(ctx.expr(0))
+            
+            if isinstance(value, bool):
+                return not value
+            else:
+                throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value._name_, type(right_value)._name_)
         else:
             return self.visitChildren(ctx)
         
