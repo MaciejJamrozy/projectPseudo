@@ -1,0 +1,25 @@
+{
+  "name": "pseudo-highligthing",
+  "displayName": "Pseudo Highligthing",
+  "description": "Syntax highligthing for Pseudo++ language.",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.99.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "pseudoPlusPlus",
+      "aliases": ["Pseudo++", "pseudoPlusPlus"],
+      "extensions": [".pseudo"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "pseudoPlusPlus",
+      "scopeName": "source.pseudo",
+      "path": "./syntaxes/pseudoPlusPlus.tmLanguage.json"
+    }]
+  }
+}

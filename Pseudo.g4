@@ -13,7 +13,7 @@ statement
     | functionCallStatement
     ;
 
-printStatement: ('print' | 'shout') '(' STRING ')';
+printStatement: ('print' | 'shout') '(' expr ')';
 
 varDeclStatement: TYPE ID (op=('=' | 'is' | '<<' | '<-') expr)?;
 
@@ -29,7 +29,7 @@ ifStatement
 whileStatement: 'while' '(' expr ')' ':' body 'end' ('loop')?;
 
 forStatement
-    : 'for' '(' TYPE_INT ID OP=('=' | 'is' | '<<' | '<-') NUMBER ';' expr ';' assignmentStatement ')' ':' body 'end' ('loop')?
+    : 'for' '(' (TYPE_INT | TYPE_FLOAT) ID OP=('=' | 'is' | '<<' | '<-') NUMBER ';' expr ';' assignmentStatement ')' ':' body 'end' ('loop')?
     ;
 
 functionDefStatement
@@ -37,7 +37,7 @@ functionDefStatement
     ;
 
 paramList
-    : ID (',' ID)*
+    : TYPE ID (',' TYPE ID)*
     ;
 
 functionCallStatement
@@ -54,6 +54,7 @@ body
 
 expr
     : ('input'|'scan'|'listen') '(' (STRING)? ')'
+    | functionCallStatement
     | expr op=(MULT | DIV) expr
     | expr op=(PLUS | MINUS) expr
     | expr op=(GREATER | SMALLER | EQUAL | DIFFERENT) expr
@@ -62,8 +63,8 @@ expr
     | expr '||' expr
     | 'not' expr
     | expr 'and' expr
-    | expr 'or' expr 
-    | '(' expr ')' 
+    | expr 'or' expr
+    | '(' expr ')'
     | STRING
     | NUMBER
     | DOUBLE
@@ -75,6 +76,8 @@ STRING
     : '"' (ESC | ~["\\])* '"'
     | '\'' (ESC | ~['\\])* '\''
     ;
+fragment ESC: '\\' ["'\\rbnt];
+
 NUMBER: [0-9]+;
 DOUBLE: [0-9]+ '.' [0-9]+;
 BOOL
@@ -82,9 +85,7 @@ BOOL
     | 'false'
     ;
 
-ID: [a-zA-Z_][a-zA-Z0-9_]*;
-WS: [ \t\r\n]+ -> skip;
-ESC: '\\' ["'\\rnt];
+WS: [ \t\n\r]+ -> skip;
 
 PLUS      : '+';
 MINUS     : '-';
@@ -107,3 +108,5 @@ TYPE_INT: 'int';
 TYPE_FLOAT: 'float';
 TYPE_STRING: 'string';
 TYPE_BOOL: 'boolean';
+
+ID: [a-zA-Z_][a-zA-Z0-9_]*;

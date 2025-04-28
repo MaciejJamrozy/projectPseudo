@@ -1,0 +1,62 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Pseudo++",
+	"patterns": [
+		{
+		"name": "keyword.control.pseudo",
+		"match": "\\b(print|shout|if|else|while|for|function|end|then|not|and|or|input|scan|listen)\\b"
+		},
+		{
+		"name": "storage.type.pseudo",
+		"match": "\\b(int|float|string|boolean)\\b"
+		},
+		{
+		"name": "constant.language.boolean.pseudo",
+		"match": "\\b(true|false)\\b"
+		},
+		{
+		"name": "string.quoted.double.pseudo",
+		"match": "\"(\\\\.|[^\"])*\""
+		},
+		{
+		"name": "string.quoted.single.pseudo",
+		"match": "'(\\\\.|[^'])*'"
+		},
+		{
+		"name": "constant.numeric.pseudo",
+		"match": "\\b\\d+(\\.\\d+)?\\b"
+		},
+		{
+		"name": "keyword.operator.pseudo",
+		"match": "(\\+|\\-|\\*|\\/|=|==|!=|<|>|&&|\\|\\|)"
+		},
+		{
+		"name": "comment.line.double-slash.pseudo",
+		"match": "//.*$"
+		},
+		{
+		"name": "variable.other.pseudo",
+		"match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b"
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.pseudoPlusPlus",
+				"match": "\\b(if|while|for|return)\\b"
+			}]
+		},
+		"strings": {
+			"name": "string.quoted.double.pseudoPlusPlus",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.pseudoPlusPlus",
+					"match": "\\\\."
+				}
+			]
+		}
+	},
+	"scopeName": "source.pseudo"
+}
