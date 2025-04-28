@@ -5,7 +5,8 @@ from PseudoParser import PseudoParser
 from SyntaxErrorListener import SyntaxErrorListener
 from Listener import Listener
 from Memory import Memory
-from PseudoExceptions import throw_unknown_operator_exception, throw_unknown_variable_exception, throw_unknown_variable_exception
+from PseudoExceptions import throw_unknown_operator_exception, throw_undefined_name_exception, throw_wrong_type_exception
+import re
 
 class PseudoInterpreter(PseudoVisitor):
     def __init__(self, memory: Memory):
@@ -22,25 +23,31 @@ class PseudoInterpreter(PseudoVisitor):
         if ctx.getChildCount() == 3 and ctx.getChild(0).getText() == '(':
             return self.visit(ctx.expr(0))
         
-        if ctx.STRING():
+        if ctx.ID():
+            var_id = ctx.ID().getText()
+            if var_id not in self.memory.variables.keys():
+                throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id)
+            else:
+                return self.memory.variables[var_id][0]
+
+        elif ctx.STRING():
             value = ctx.STRING().getText()[1:-1]  # Usuwanie cudzysłowów
             return bytes(value, "utf-8").decode("unicode_escape")
         
-        elif ctx.NUMBER():
-            return self.get_nummeric_value(ctx.NUMBER().getText())
-
-        elif ctx.DOUBLE():
-            return self.get_nummeric_value(ctx.NUMBER().getText())
+        elif ctx.NUMBER() or ctx.DOUBLE():
+            return self.get_nummeric_value(ctx.getText())
         
         elif ctx.op and ctx.op.type == PseudoParser.PLUS:
             left_value = self.visit(ctx.expr(0))
             right_value = self.visit(ctx.expr(1))
 
-            if type(left_value) == type(right_value):
-                return left_value + right_value
-            else:
-                throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, type(right_value).__name__)
-        
+            match (left_value, right_value):
+                case (str(), str()):
+                    return left_value + right_value
+                case (int() | float(), int() | float()):
+                    return left_value + right_value
+                case _:
+                    throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, type(right_value).__name__)
         elif ctx.op and ctx.op.type == PseudoParser.MINUS:  
             left_value = self.visit(ctx.expr(0))
             right_value = self.visit(ctx.expr(1))
@@ -76,20 +83,39 @@ class PseudoInterpreter(PseudoVisitor):
         
     def visitAssignmentStatement(self, ctx:PseudoParser.AssignmentStatementContext):
         var_id = ctx.ID().getText()
+        var_type = self.memory.variables[var_id][1]
+        value = str(self.visit(ctx.expr()))
         
         if var_id not in self.memory.variables.keys():
-            throw_unknown_variable_exception(ctx.start.line, ctx.start.column, var_id)
+            throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id)
         
-        var_type = self.memory.variables[var_id][1]
-        value = ctx.expr().getText()
         try:
-            if var_type == 'string': value = str(value)
-            elif var_type == 'int': value = int(value)
-            elif var_type == 'float': value = float(value)
-            elif var_type == 'boolean': value = bool(value)
-        except Exception as e:
-            throw_unknown_variable_exception(ctx.start.line, ctx.start.column, var_type)
+            if var_type == 'string':
+                if not re.fullmatch(r'(?:\\.|(?!(["\'])).)*', value):
+                    raise ValueError
 
+            elif var_type == 'int':
+                if not re.fullmatch(r'-?\d+', value):
+                    raise ValueError
+                value = int(value)
+
+            elif var_type == 'float':
+                if not re.fullmatch(r'-?\d+\.\d+', value):
+                    raise ValueError
+                value = float(value)
+
+            elif var_type == 'boolean':
+                if not value.lower() in ["true", "false"]:
+                    raise ValueError
+                value = value.lower() == "true"
+
+            else:
+                throw_wrong_type_exception(ctx.start.line, ctx.start.column, var_type)
+        
+        except Exception:
+            print(value)
+            throw_wrong_type_exception(ctx.start.line, ctx.start.column, var_type)
+        
         self.memory.variables[var_id][0] = value
 
 def run_interpreter(input_text):
@@ -104,11 +130,11 @@ def run_interpreter(input_text):
 
     memory = Memory() # class used for managing variables (it contains dict for variables)
 
-    listener = Listener(memory)
+    interpreter = PseudoInterpreter(memory)
+    listener = Listener(memory, interpreter)
     walker = ParseTreeWalker()
     walker.walk(listener, tree)
 
-    interpreter = PseudoInterpreter(memory)
     interpreter.visit(tree)
 
 # Run interpreter

@@ -1,5 +1,3 @@
-int x; 
+float x = 2 + 2.3;
 
-x <- "nie jestem int";
-
-
+print(x);
