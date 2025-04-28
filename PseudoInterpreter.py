@@ -96,6 +96,35 @@ class PseudoInterpreter(PseudoVisitor):
                 return not value
             else:
                 throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value._name_, type(right_value)._name_)
+
+        elif ctx.op and ctx.op.type == PseudoParser.GREATER:
+            left_value = self.visit(ctx.expr(0))
+            right_value = self.visit(ctx.expr(1))
+            if isinstance(left_value, (int, float)) and isinstance(right_value, (int.float)):
+                return left_value > right_value
+            else:
+                throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value)._name_, type(right_value)._name_)
+
+
+        elif ctx.op and ctx.op.type == PseudoParser.SMALLER:
+            left_value = self.visit(ctx.expr(0))
+            right_value = self.visit(ctx.expr(1))
+            if isinstance(left_value, (int, float)) and isinstance(right_value, (int.float)):
+                return left_value < right_value
+            else:
+                throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value)._name_, type(right_value)._name_)
+
+        elif ctx.op and ctx.op.type == PseudoParser.EQUAL:
+            left_value = self.visit(ctx.expr(0))
+            right_value = self.visit(ctx.expr(1))
+            return left_value == right_value
+
+
+        elif ctx.op and ctx.op.type == PseudoParser.DIFFERENT:
+            left_value = self.visit(ctx.expr(0))
+            right_value = self.visit(ctx.expr(1))
+            return left_value != right_value
+                                                 
         else:
             return self.visitChildren(ctx)
         
