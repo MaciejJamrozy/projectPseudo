@@ -58,12 +58,9 @@ expr
     | expr op=(MULT | DIV) expr
     | expr op=(PLUS | MINUS) expr
     | expr op=(GREATER | SMALLER | EQUAL | DIFFERENT) expr
-    | '!' expr
-    | expr '&&' expr
-    | expr '||' expr
-    | 'not' expr
-    | expr 'and' expr
-    | expr 'or' expr
+    | expr AND expr
+    | expr OR expr
+    | NOT expr
     | '(' expr ')'
     | STRING
     | NUMBER
@@ -91,11 +88,13 @@ PLUS      : '+';
 MINUS     : '-';
 MULT      : '*';
 DIV       : '/';
-EQ        : '=';
-GREATER   : '>';
-SMALLER   : '<';
-EQUAL     : '==';
-DIFFERENT : '!=';
+GREATER   : '>'| 'greater than';
+SMALLER   : '<'| 'smaller than';
+EQUAL     : '=='|'equals';
+DIFFERENT : '!='| 'differs';
+AND       : '&&'|'and';
+OR        : '||'|'or';
+NOT       : '!'|'not';
 
 TYPE
     : TYPE_INT
