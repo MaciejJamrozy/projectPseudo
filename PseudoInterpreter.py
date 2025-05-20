@@ -146,6 +146,22 @@ class PseudoInterpreter(PseudoVisitor):
 
         self.memory.variables[var_id][0] = value
 
+    def visitIfStatement(self, ctx: PseudoParser.IfStatementContext):
+        condition = self.visit(ctx.expr())
+
+        if not isinstance(condition, bool):
+            throw_wrong_type_exception(ctx.start.line, ctx.start.column, "boolean")
+
+        if_body = ctx.body(0)
+        else_body = ctx.body(1) if ctx.ELSE() else None
+
+        if condition:
+            for stmt in if_body.statement():
+                self.visit(stmt)
+        elif else_body:
+            for stmt in else_body.statement():
+                self.visit(stmt)
+
 def run_interpreter(input_text):
     lexer = PseudoLexer(InputStream(input_text))
     stream = CommonTokenStream(lexer)
