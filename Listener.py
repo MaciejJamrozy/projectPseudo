@@ -49,8 +49,12 @@ class Listener(PseudoListener):
         else:
             self.memory.variables[var_id] = [None, var_type]
     def enterForStatement(self, ctx: PseudoParser.ForStatementContext):
-        if ctx.TYPE_INT() or ctx.TYPE_FLOAT():
-            var_type = ctx.TYPE_INT().getText() if ctx.TYPE_INT() else ctx.TYPE_FLOAT().getText()
-            var_id = ctx.ID().getText()
-            value = self.interpreter.get_nummeric_value(ctx.NUMBER().getText())
-            self.memory.variables[var_id] = [value, var_type]
+        if ctx.getToken(PseudoParser.TYPE_INT, 0):
+            var_type = 'int'
+        elif ctx.getToken(PseudoParser.TYPE_FLOAT, 0):
+            var_type = 'float'
+        var_type = 'int'
+
+        var_id = ctx.ID().getText()
+        value = int(ctx.NUMBER().getText())
+        self.memory.variables[var_id] = [value, var_type]

@@ -1,4 +1,4 @@
-// Generated from /Users/maciejjamrozy/Studia/Kompilatory/projectPseudo/Pseudo.g4 by ANTLR 4.13.1
+// Generated from /Users/robertjacak/Documents/Kompilatory/pseudo/projectPseudo/Pseudo.g4 by ANTLR 4.13.1
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;

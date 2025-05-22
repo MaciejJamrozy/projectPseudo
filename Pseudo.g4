@@ -2,106 +2,85 @@ grammar Pseudo;
 
 program: (statement ';')* EOF;
 
-statement
-    : printStatement
-    | varDeclStatement
-    | assignmentStatement
-    | ifStatement
-    | whileStatement
-    | forStatement
-    | functionDefStatement
-    | functionCallStatement
-    ;
+statement:
+	printStatement
+	| varDeclStatement
+	| assignmentStatement
+	| ifStatement
+	| whileStatement
+	| forStatement
+	| functionDefStatement
+	| functionCallStatement;
 
 printStatement: ('print' | 'shout') '(' expr ')';
 
-varDeclStatement: TYPE ID (op=('=' | 'is' | '<<' | '<-') expr)?;
+varDeclStatement:
+	TYPE ID (op = ('=' | 'is' | '<<' | '<-') expr)?;
 
-assignmentStatement: ID op=('=' | 'is' | '<<' | '<-') expr;
+assignmentStatement: ID op = ('=' | 'is' | '<<' | '<-') expr;
 
-ifStatement
-    : 'if' '(' expr ')' ':' body ('else' ':' body)? 'end' ('if')?
-    | 'if' expr ':' body ('else' ':' body)? 'end' ('if')?
-    | 'if' '(' expr ')' 'then' body ('else' ':' body)? 'end' ('if')?
-    | 'if' expr 'then' body ('else' ':' body)? 'end' ('if')?
-    ;
+ifStatement:
+	'if' '(' expr ')' ':' body ('else' ':' body)? 'end' ('if')?
+	| 'if' expr ':' body ('else' ':' body)? 'end' ('if')?
+	| 'if' '(' expr ')' 'then' body ('else' ':' body)? 'end' (
+		'if'
+	)?
+	| 'if' expr 'then' body ('else' ':' body)? 'end' ('if')?;
 
 whileStatement: 'while' '(' expr ')' ':' body 'end' ('loop')?;
 
-forStatement
-    : 'for' '(' (TYPE_INT | TYPE_FLOAT) ID OP=('=' | 'is' | '<<' | '<-') NUMBER ';' expr ';' assignmentStatement ')' ':' body 'end' ('loop')?
-    ;
+forStatement:
+	'for' '(' TYPE ID OP = ('=' | 'is' | '<<' | '<-') NUMBER ';' expr ';' assignmentStatement ')'
+		':' body 'end' ('loop')?;
 
-functionDefStatement
-    : 'function' ID '(' paramList? ')' ':' body 'end' ('function')?
-    ;
+functionDefStatement:
+	'function' ID '(' paramList? ')' ':' body 'end' ('function')?;
 
-paramList
-    : TYPE ID (',' TYPE ID)*
-    ;
+paramList: TYPE ID (',' TYPE ID)*;
 
-functionCallStatement
-    : ID '(' argumentList? ')'
-    ;
+functionCallStatement: ID '(' argumentList? ')';
 
-argumentList
-    : expr (',' expr)*
-    ;
+argumentList: expr (',' expr)*;
 
-body
-    : (statement ';')* 
-    ;
+body: (statement ';')*;
 
-expr
-    : ('input'|'scan'|'listen') '(' (STRING)? ')'
-    | functionCallStatement
-    | expr op=(MULT | DIV) expr
-    | expr op=(PLUS | MINUS) expr
-    | expr op=(GREATER | SMALLER | EQUAL | DIFFERENT) expr
-    | expr AND expr
-    | expr OR expr
-    | NOT expr
-    | '(' expr ')'
-    | STRING
-    | NUMBER
-    | DOUBLE
-    | BOOL
-    | ID
-    ;
+expr: ('input' | 'scan' | 'listen') '(' (STRING)? ')'
+	| functionCallStatement
+	| expr op = (MULT | DIV) expr
+	| expr op = (PLUS | MINUS) expr
+	| expr op = (GREATER | SMALLER | EQUAL | DIFFERENT) expr
+	| expr AND expr
+	| expr OR expr
+	| NOT expr
+	| '(' expr ')'
+	| STRING
+	| NUMBER
+	| DOUBLE
+	| BOOL
+	| ID;
 
-STRING
-    : '"' (ESC | ~["\\])* '"'
-    | '\'' (ESC | ~['\\])* '\''
-    ;
+STRING: '"' (ESC | ~["\\])* '"' | '\'' (ESC | ~['\\])* '\'';
 fragment ESC: '\\' ["'\\rbnt];
 
 NUMBER: [0-9]+;
 DOUBLE: [0-9]+ '.' [0-9]+;
-BOOL
-    : 'true'
-    | 'false'
-    ;
+BOOL: 'true' | 'false';
 
 WS: [ \t\n\r]+ -> skip;
 
-PLUS      : '+';
-MINUS     : '-';
-MULT      : '*';
-DIV       : '/';
-GREATER   : '>'| 'greater than';
-SMALLER   : '<'| 'smaller than';
-EQUAL     : '=='|'equals';
-DIFFERENT : '!='| 'differs';
-AND       : '&&'|'and';
-OR        : '||'|'or';
-NOT       : '!'|'not';
+PLUS: '+';
+MINUS: '-';
+MULT: '*';
+DIV: '/';
+GREATER: '>' | 'greater than';
+SMALLER: '<' | 'smaller than';
+EQUAL: '==' | 'equals';
+DIFFERENT: '!=' | 'differs';
+AND: '&&' | 'and';
+OR: '||' | 'or';
+NOT: '!' | 'not';
 
-TYPE
-    : TYPE_INT
-    | TYPE_FLOAT
-    | TYPE_STRING
-    | TYPE_BOOL
-    ;
+TYPE: TYPE_INT | TYPE_FLOAT | TYPE_STRING | TYPE_BOOL;
 
 TYPE_INT: 'int';
 TYPE_FLOAT: 'float';
