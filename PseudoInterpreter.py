@@ -178,17 +178,14 @@ class PseudoInterpreter(PseudoVisitor):
 
     def visitIfStatement(self, ctx: PseudoParser.IfStatementContext):
         condition = self.visit(ctx.expr())
-
         if not isinstance(condition, bool):
             throw_wrong_type_exception(ctx.start.line, ctx.start.column, "boolean")
-
         if_body = ctx.body(0)
-        else_body = ctx.body(1) if ctx.ELSE() else None
-
+        else_body = ctx.body(1)  # Returns None if no else part exists
         if condition:
             for stmt in if_body.statement():
                 self.visit(stmt)
-        elif else_body:
+        elif else_body is not None:
             for stmt in else_body.statement():
                 self.visit(stmt)
     def visitWhileStatement(self, ctx: PseudoParser.WhileStatementContext):
