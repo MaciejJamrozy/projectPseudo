@@ -191,12 +191,30 @@ class PseudoInterpreter(PseudoVisitor):
         elif else_body:
             for stmt in else_body.statement():
                 self.visit(stmt)
+    def visitWhileStatement(self, ctx: PseudoParser.WhileStatementContext):
+        condition = self.visit(ctx.expr())
+        if not isinstance(condition, bool):
+            throw_wrong_type_exception(ctx.start.line, ctx.start.column, "boolean")
+        while condition:
+            for stmt in ctx.body().statement():
+                self.visit(stmt)
+            condition = self.visit(ctx.expr())
+            
+    def visitForStatement(self, ctx: PseudoParser.ForStatementContext):
+        condition = self.visit(ctx.expr())
+        if not isinstance(condition, bool):
+            throw_wrong_type_exception(ctx.start.line, ctx.start.column, "boolean")
+        while condition:
+            for stmt in ctx.body().statement():
+                self.visit(stmt)
+            if ctx.assignmentStatement():
+                self.visit(ctx.assignmentStatement())
+            condition = self.visit(ctx.expr())
 
 def run_interpreter(input_text):
     lexer = PseudoLexer(InputStream(input_text))
     stream = CommonTokenStream(lexer)
     parser = PseudoParser(stream)
-    
     parser.removeErrorListeners()
     parser.addErrorListener(SyntaxErrorListener())
 
