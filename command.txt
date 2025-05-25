@@ -1,3 +1,5 @@
 Komenda do odpalenia ANTLR dla danej gramatyki i wygenerowania visitora:
 
 java -jar /Users/maciejjamrozy/Studia/Kompilatory/ANTLR/antlr-4.13.2-complete.jar -Dlanguage=Python3 -visitor Pseudo.g4
+
+java -jar /Users/robertjacak/Documents/ANTLR/antlr-4.13.2-complete.jar -Dlanguage=Python3 -visitor Pseudo.g4

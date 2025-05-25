@@ -1,3 +1,10 @@
-if(1==1):
-    print("test");
+string tekst = "T";
+int i = 0;
+
+for(;tekst != "ti";i=i+1):
+    if(i==5):
+        tekst = "ti";
+    end;
+    print(tekst);
+    print(i);
 end;

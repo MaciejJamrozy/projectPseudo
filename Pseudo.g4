@@ -30,8 +30,9 @@ ifStatement:
 whileStatement: 'while' '(' expr ')' ':' body 'end' ('loop')?;
 
 forStatement:
-	'for' '(' TYPE ID OP = ('=' | 'is' | '<<' | '<-') NUMBER ';' expr ';' assignmentStatement ')'
-		':' body 'end' ('loop')?;
+	'for' '(' (varDeclStatement)? ';' expr ';' (
+		assignmentStatement
+	)? ')' ':' body 'end' ('loop')?;
 
 functionDefStatement:
 	'function' ID '(' paramList? ')' ':' body 'end' ('function')?;

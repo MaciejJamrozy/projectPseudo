@@ -198,6 +198,8 @@ class PseudoInterpreter(PseudoVisitor):
             condition = self.visit(ctx.expr())
             
     def visitForStatement(self, ctx: PseudoParser.ForStatementContext):
+        if ctx.varDeclStatement():
+            self.visit(ctx.varDeclStatement())
         condition = self.visit(ctx.expr())
         if not isinstance(condition, bool):
             throw_wrong_type_exception(ctx.start.line, ctx.start.column, "boolean")
