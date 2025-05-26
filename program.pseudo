@@ -1,10 +1,4 @@
-string tekst = "T";
-int i = 0;
-
-for(;tekst != "ti";i=i+1):
-    if(i==5):
-        tekst = "ti";
-    end;
-    print(tekst);
-    print(i);
-end;
+int n = -10;
+int p = 4+2;
+boolean t = 'true' or 'false';
+print(t);

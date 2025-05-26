@@ -49,6 +49,7 @@ expr: ('input' | 'scan' | 'listen') '(' (STRING)? ')'
 	| functionCallStatement
 	| expr op = (MULT | DIV) expr
 	| expr op = (PLUS | MINUS) expr
+	| MINUS expr
 	| expr op = (GREATER | SMALLER | EQUAL | DIFFERENT) expr
 	| expr AND expr
 	| expr OR expr

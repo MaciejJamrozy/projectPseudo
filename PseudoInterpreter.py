@@ -20,6 +20,8 @@ class PseudoInterpreter(PseudoVisitor):
         return float(var) if '.' in var else int(var)
     
     def visitExpr(self, ctx):
+        print("Visiting expression:", ctx.op.type if ctx.op else "None")
+        
         if ctx.getChildCount() == 3 and ctx.getChild(0).getText() == '(':
             return self.visit(ctx.expr(0))
         
@@ -50,13 +52,22 @@ class PseudoInterpreter(PseudoVisitor):
                     throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, type(right_value).__name__)
         elif ctx.op and ctx.op.type == PseudoParser.MINUS:  
             left_value = self.visit(ctx.expr(0))
-            right_value = self.visit(ctx.expr(1))
+            print("Left value:", left_value)
+            print("Right value:", ctx.expr(1))
+            if not(ctx.expr(1) is None):
+                right_value = self.visit(ctx.expr(1))
 
-            if not (isinstance(left_value, str) or isinstance(right_value, str)):
-                return left_value - right_value
+                if not (isinstance(left_value, str) or isinstance(right_value, str)):
+                    return left_value - right_value
+                else:
+                    throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, type(right_value).__name__)
+
             else:
-                throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, type(right_value).__name__)
-        
+                print("Unary minus")
+                if isinstance(left_value, int, float):
+                    throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, "int/float")
+                return -left_value
+            
         elif ctx.op and ctx.op.type == PseudoParser.MULT:  
             left_value = self.visit(ctx.expr(0))
             right_value = self.visit(ctx.expr(1))
@@ -94,7 +105,7 @@ class PseudoInterpreter(PseudoVisitor):
                                         
         elif ctx.op and ctx.op.type == PseudoParser.NOT:
             value = self.visit(ctx.expr(0))
-            
+
             if isinstance(value, bool):
                 return not value
             else:
