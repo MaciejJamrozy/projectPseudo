@@ -1,4 +1,0 @@
-int n = -10;
-int p = 4+2;
-boolean t = 'true' or 'false';
-print(t);
