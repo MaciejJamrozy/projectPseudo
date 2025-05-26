@@ -20,7 +20,7 @@ class PseudoInterpreter(PseudoVisitor):
     def get_nummeric_value(self, var: str):
         return float(var) if '.' in var else int(var)
     
-    def visitExpr(self, ctx):        
+    def visitExpr(self, ctx):
         if ctx.getChildCount() == 3 and ctx.getChild(0).getText() == '(':
             return self.visit(ctx.expr(0))
         
@@ -56,19 +56,13 @@ class PseudoInterpreter(PseudoVisitor):
                     throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, type(right_value).__name__)
         elif ctx.op and ctx.op.type == PseudoParser.MINUS:  
             left_value = self.visit(ctx.expr(0))
-            if not(ctx.expr(1) is None):
-                right_value = self.visit(ctx.expr(1))
+            right_value = self.visit(ctx.expr(1))
 
-                if not (isinstance(left_value, str) or isinstance(right_value, str)):
-                    return left_value - right_value
-                else:
-                    throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, type(right_value).__name__)
-
+            if not (isinstance(left_value, str) or isinstance(right_value, str)):
+                return left_value - right_value
             else:
-                if isinstance(left_value, str):
-                    throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, "int/float")
-                return -left_value
-            
+                throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, type(right_value).__name__)
+        
         elif ctx.op and ctx.op.type == PseudoParser.MULT:  
             left_value = self.visit(ctx.expr(0))
             right_value = self.visit(ctx.expr(1))
@@ -260,16 +254,22 @@ class PseudoInterpreter(PseudoVisitor):
         return None
     
     def visitIfStatement(self, ctx: PseudoParser.IfStatementContext):
-        condition = self.visit(ctx.expr())
-        if not isinstance(condition, bool):
-            throw_wrong_type_exception(ctx.start.line, ctx.start.column, "boolean")
-        if_body = ctx.body(0)
-        else_body = ctx.body(1)  # Returns None if no else part exists
-        if condition:
-            for stmt in if_body.statement():
+        if self.visit(ctx.expr(0)):
+            for stmt in ctx.body(0).statement():
                 self.visit(stmt)
-        elif else_body is not None:
-            for stmt in else_body.statement():
+            return
+
+        # Sprawdź wszystkie elseif-y
+        num_elseif = len(ctx.expr()) - 1  # pierwszy expr to 'if', reszta to 'elseif'
+        for i in range(num_elseif):
+            if self.visit(ctx.expr(i + 1)):
+                for stmt in ctx.body(i + 1).statement():
+                    self.visit(stmt)
+                return
+
+        # else (jeśli istnieje)
+        if ctx.body(num_elseif + 1) is not None:
+            for stmt in ctx.body(num_elseif + 1).statement():
                 self.visit(stmt)
 
     def visitWhileStatement(self, ctx: PseudoParser.WhileStatementContext):
@@ -282,8 +282,6 @@ class PseudoInterpreter(PseudoVisitor):
             condition = self.visit(ctx.expr())
             
     def visitForStatement(self, ctx: PseudoParser.ForStatementContext):
-        if ctx.varDeclStatement():
-            self.visit(ctx.varDeclStatement())
         condition = self.visit(ctx.expr())
         if not isinstance(condition, bool):
             throw_wrong_type_exception(ctx.start.line, ctx.start.column, "boolean")
