@@ -1,8 +1,0 @@
-function int factorial(int n):
-    if n < 2:
-        return n;
-    end if;
-    return (n * factorial(n-1));
-    end function;
-
-print(n);
