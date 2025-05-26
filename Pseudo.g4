@@ -20,13 +20,11 @@ varDeclStatement:
 assignmentStatement: ID op = ('=' | 'is' | '<<' | '<-') expr;
 
 ifStatement:
-    'if' exprWithOptionalParens (':' | 'then') body
-    ( 'elseif' exprWithOptionalParens (':' | 'then') body )*
-    ( 'else' ':' body )?
+    'if' ( '(' expr ')' | expr ) (':' | 'then') body
+    ( 'elseif' ( '(' expr ')' | expr ) (':' | 'then') body )*
+    ('else' ':' body)?
     'end' ('if')?;
 
-exprWithOptionalParens:
-    '(' expr ')' | expr;
 
 
 whileStatement: 'while' '(' expr ')' ':' body 'end' ('loop')?;
