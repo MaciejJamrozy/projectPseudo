@@ -2,7 +2,6 @@ __pycache__/
 .antlr/
 PseudoParser.py
 program.pseudo
-Pseudo.g4
 Pseudo.interp
 Pseudo.tokens
 PseudoLexer.interp
