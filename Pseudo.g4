@@ -94,6 +94,9 @@ BOOL: 'true' | 'false';
 
 WS: [ \t\n\r]+ -> skip;
 
+SINGLE_LINE_COMMENT: '//' ~[\r\n]* -> skip;
+MULTI_LINE_COMMENT: '/*' .*? '*/' -> skip;
+
 PLUS: '+';
 MINUS: '-';
 MULT: '*';
