@@ -177,16 +177,22 @@ class PseudoInterpreter(PseudoVisitor):
         self.memory.variables[var_id][0] = value
 
     def visitIfStatement(self, ctx: PseudoParser.IfStatementContext):
-        condition = self.visit(ctx.expr())
-        if not isinstance(condition, bool):
-            throw_wrong_type_exception(ctx.start.line, ctx.start.column, "boolean")
-        if_body = ctx.body(0)
-        else_body = ctx.body(1)  # Returns None if no else part exists
-        if condition:
-            for stmt in if_body.statement():
+        if self.visit(ctx.expr(0)):
+            for stmt in ctx.body(0).statement():
                 self.visit(stmt)
-        elif else_body is not None:
-            for stmt in else_body.statement():
+            return
+
+        # Sprawdź wszystkie elseif-y
+        num_elseif = len(ctx.expr()) - 1  # pierwszy expr to 'if', reszta to 'elseif'
+        for i in range(num_elseif):
+            if self.visit(ctx.expr(i + 1)):
+                for stmt in ctx.body(i + 1).statement():
+                    self.visit(stmt)
+                return
+
+        # else (jeśli istnieje)
+        if ctx.body(num_elseif + 1) is not None:
+            for stmt in ctx.body(num_elseif + 1).statement():
                 self.visit(stmt)
     def visitWhileStatement(self, ctx: PseudoParser.WhileStatementContext):
         condition = self.visit(ctx.expr())
