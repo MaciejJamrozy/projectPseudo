@@ -74,6 +74,7 @@ expr: ('input' | 'scan' | 'listen') '(' (STRING)? ')'
 	| expr op = (PLUS | MINUS) expr
 	| expr op = (GREATER | SMALLER | EQUAL | DIFFERENT) expr
 	| expr op = INTDIV expr
+	| op = MINUS expr
 	| expr AND expr
 	| expr OR expr
 	| op = NOT expr

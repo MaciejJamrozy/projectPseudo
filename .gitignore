@@ -10,3 +10,4 @@ PseudoLexer.tokens
 PseudoListener.py
 PseudoVisitor.py
 command.txt
+*.pseudo

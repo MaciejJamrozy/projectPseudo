@@ -20,9 +20,7 @@ class PseudoInterpreter(PseudoVisitor):
     def get_nummeric_value(self, var: str):
         return float(var) if '.' in var else int(var)
     
-    def visitExpr(self, ctx):
-        print("Visiting expression:", ctx.op.type if ctx.op else "None")
-        
+    def visitExpr(self, ctx):        
         if ctx.getChildCount() == 3 and ctx.getChild(0).getText() == '(':
             return self.visit(ctx.expr(0))
         
@@ -58,8 +56,6 @@ class PseudoInterpreter(PseudoVisitor):
                     throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, type(right_value).__name__)
         elif ctx.op and ctx.op.type == PseudoParser.MINUS:  
             left_value = self.visit(ctx.expr(0))
-            print("Left value:", left_value)
-            print("Right value:", ctx.expr(1))
             if not(ctx.expr(1) is None):
                 right_value = self.visit(ctx.expr(1))
 
@@ -69,8 +65,7 @@ class PseudoInterpreter(PseudoVisitor):
                     throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, type(right_value).__name__)
 
             else:
-                print("Unary minus")
-                if isinstance(left_value, int, float):
+                if isinstance(left_value, str):
                     throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, "int/float")
                 return -left_value
             
