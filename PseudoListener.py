@@ -35,15 +35,6 @@ class PseudoListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by PseudoParser#varDeclStatement.
-    def enterVarDeclStatement(self, ctx:PseudoParser.VarDeclStatementContext):
-        pass
-
-    # Exit a parse tree produced by PseudoParser#varDeclStatement.
-    def exitVarDeclStatement(self, ctx:PseudoParser.VarDeclStatementContext):
-        pass
-
-
     # Enter a parse tree produced by PseudoParser#assignmentStatement.
     def enterAssignmentStatement(self, ctx:PseudoParser.AssignmentStatementContext):
         pass
@@ -80,12 +71,21 @@ class PseudoListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by PseudoParser#functionDefStatement.
-    def enterFunctionDefStatement(self, ctx:PseudoParser.FunctionDefStatementContext):
+    # Enter a parse tree produced by PseudoParser#functionDef.
+    def enterFunctionDef(self, ctx:PseudoParser.FunctionDefContext):
         pass
 
-    # Exit a parse tree produced by PseudoParser#functionDefStatement.
-    def exitFunctionDefStatement(self, ctx:PseudoParser.FunctionDefStatementContext):
+    # Exit a parse tree produced by PseudoParser#functionDef.
+    def exitFunctionDef(self, ctx:PseudoParser.FunctionDefContext):
+        pass
+
+
+    # Enter a parse tree produced by PseudoParser#returnStatement.
+    def enterReturnStatement(self, ctx:PseudoParser.ReturnStatementContext):
+        pass
+
+    # Exit a parse tree produced by PseudoParser#returnStatement.
+    def exitReturnStatement(self, ctx:PseudoParser.ReturnStatementContext):
         pass
 
 
@@ -95,6 +95,15 @@ class PseudoListener(ParseTreeListener):
 
     # Exit a parse tree produced by PseudoParser#paramList.
     def exitParamList(self, ctx:PseudoParser.ParamListContext):
+        pass
+
+
+    # Enter a parse tree produced by PseudoParser#param.
+    def enterParam(self, ctx:PseudoParser.ParamContext):
+        pass
+
+    # Exit a parse tree produced by PseudoParser#param.
+    def exitParam(self, ctx:PseudoParser.ParamContext):
         pass
 
 
@@ -122,6 +131,15 @@ class PseudoListener(ParseTreeListener):
 
     # Exit a parse tree produced by PseudoParser#body.
     def exitBody(self, ctx:PseudoParser.BodyContext):
+        pass
+
+
+    # Enter a parse tree produced by PseudoParser#varDeclStatement.
+    def enterVarDeclStatement(self, ctx:PseudoParser.VarDeclStatementContext):
+        pass
+
+    # Exit a parse tree produced by PseudoParser#varDeclStatement.
+    def exitVarDeclStatement(self, ctx:PseudoParser.VarDeclStatementContext):
         pass
 
 

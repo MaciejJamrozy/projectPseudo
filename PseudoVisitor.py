@@ -24,11 +24,6 @@ class PseudoVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by PseudoParser#varDeclStatement.
-    def visitVarDeclStatement(self, ctx:PseudoParser.VarDeclStatementContext):
-        return self.visitChildren(ctx)
-
-
     # Visit a parse tree produced by PseudoParser#assignmentStatement.
     def visitAssignmentStatement(self, ctx:PseudoParser.AssignmentStatementContext):
         return self.visitChildren(ctx)
@@ -49,13 +44,23 @@ class PseudoVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by PseudoParser#functionDefStatement.
-    def visitFunctionDefStatement(self, ctx:PseudoParser.FunctionDefStatementContext):
+    # Visit a parse tree produced by PseudoParser#functionDef.
+    def visitFunctionDef(self, ctx:PseudoParser.FunctionDefContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by PseudoParser#returnStatement.
+    def visitReturnStatement(self, ctx:PseudoParser.ReturnStatementContext):
         return self.visitChildren(ctx)
 
 
     # Visit a parse tree produced by PseudoParser#paramList.
     def visitParamList(self, ctx:PseudoParser.ParamListContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by PseudoParser#param.
+    def visitParam(self, ctx:PseudoParser.ParamContext):
         return self.visitChildren(ctx)
 
 
@@ -71,6 +76,11 @@ class PseudoVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by PseudoParser#body.
     def visitBody(self, ctx:PseudoParser.BodyContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by PseudoParser#varDeclStatement.
+    def visitVarDeclStatement(self, ctx:PseudoParser.VarDeclStatementContext):
         return self.visitChildren(ctx)
 
 

@@ -1,6 +1,3 @@
-from antlr4 import *
-from PseudoLexer import PseudoLexer
-from PseudoParser import PseudoParser
 from antlr4.error.ErrorListener import ErrorListener
 
 class SyntaxErrorListener(ErrorListener):

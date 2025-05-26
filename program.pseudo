@@ -1,10 +1,8 @@
-string tekst = "T";
-int i = 0;
+function int factorial(int n):
+    if n < 2:
+        return n;
+    end if;
+    return (n * factorial(n-1));
+    end function;
 
-for(;tekst != "ti";i=i+1):
-    if(i==5):
-        tekst = "ti";
-    end;
-    print(tekst);
-    print(i);
-end;
+print(n);
