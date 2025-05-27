@@ -22,8 +22,6 @@ ifStatement:
     ('else' ':' body)?
     'end' ('if')?;
 
-
-
 whileStatement: 'while' '(' expr ')' ':' body 'end' ('loop')?;
 
 forStatement:

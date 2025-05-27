@@ -54,7 +54,6 @@ class Listener(PseudoListener):
                 try:
                     if var_type == 'string':
                         if not re.fullmatch(r'(?:\\.|(?!(["\'])).)*', value):
-                            print(type(value))
                             raise ValueError
 
                     elif var_type == 'int':

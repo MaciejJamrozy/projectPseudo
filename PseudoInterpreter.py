@@ -162,6 +162,7 @@ class PseudoInterpreter(PseudoVisitor):
             return self.visitChildren(ctx)
         
     def visitAssignmentStatement(self, ctx):
+        print(ctx.parentCtx)
         var_id = ctx.ID().getText()
         var_type = self.memory.variables[var_id]["type"]
         value = str(self.visit(ctx.expr()))
@@ -290,7 +291,7 @@ class PseudoInterpreter(PseudoVisitor):
         while condition:
             for stmt in ctx.body().statement():
                 self.visit(stmt)
-            condition = self.visit(ctx.expr())
+            condition = self.visit(ctx.expr())  
             
     def visitForStatement(self, ctx: PseudoParser.ForStatementContext):
         if ctx.varDeclStatement():
