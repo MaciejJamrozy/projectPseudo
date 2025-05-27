@@ -27,12 +27,9 @@ ifStatement:
 whileStatement: 'while' '(' expr ')' ':' body 'end' ('loop')?;
 
 forStatement:
-	'for' '(' TYPE ID OP = ('=' | 'is' | '<<' | '<-') NUMBER ';' expr ';' assignmentStatement ')'
-		':' body 'end' ('loop')?
-	| 'for' '(' ';' expr ';' assignmentStatement ')' ':' body 'end' (
+	'for' '(' varDeclStatement? ';' expr ';' assignmentStatement? ')' ':' body 'end' (
 		'loop'
-	)?
-	| 'for' '(' ';' expr ';' ')' ':' body 'end' ('loop')?;
+	)?;
 
 functionDef:
 	'function' type = TYPE name = ID '(' params = paramList? ')' ':' block = body 'end' (

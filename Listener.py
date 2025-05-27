@@ -83,17 +83,3 @@ class Listener(PseudoListener):
                                                 "decl_line": decl_line
                                                 }
             
-    def enterForStatement(self, ctx: PseudoParser.ForStatementContext):
-        if ctx.getToken(PseudoParser.TYPE_INT, 0):
-            var_type = 'int'
-        elif ctx.getToken(PseudoParser.TYPE_FLOAT, 0):
-            var_type = 'float'
-        var_type = 'int'
-
-        var_id = ctx.ID().getText()
-        value = int(ctx.NUMBER().getText())
-        decl_line = ctx.start.line
-        self.memory.variables[var_id] = {"value": value,
-                                         "type": var_type,
-                                         "decl_line": decl_line
-                                         }
