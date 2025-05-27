@@ -162,6 +162,7 @@ class PseudoInterpreter(PseudoVisitor):
             return self.visitChildren(ctx)
         
     def visitAssignmentStatement(self, ctx):
+        print(ctx.parentCtx)
         var_id = ctx.ID().getText()
         var_type = self.memory.get_var(var_id)["type"]
         value = str(self.visit(ctx.expr()))
