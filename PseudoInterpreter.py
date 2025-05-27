@@ -56,13 +56,19 @@ class PseudoInterpreter(PseudoVisitor):
                     throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, type(right_value).__name__)
         elif ctx.op and ctx.op.type == PseudoParser.MINUS:  
             left_value = self.visit(ctx.expr(0))
-            right_value = self.visit(ctx.expr(1))
+            if not(ctx.expr(1) is None):
+                right_value = self.visit(ctx.expr(1))
 
-            if not (isinstance(left_value, str) or isinstance(right_value, str)):
-                return left_value - right_value
+                if not (isinstance(left_value, str) or isinstance(right_value, str)):
+                    return left_value - right_value
+                else:
+                    throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, type(right_value).__name__)
+
             else:
-                throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, type(right_value).__name__)
-        
+                if isinstance(left_value, str):
+                    throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, "int/float")
+                return -left_value
+            
         elif ctx.op and ctx.op.type == PseudoParser.MULT:  
             left_value = self.visit(ctx.expr(0))
             right_value = self.visit(ctx.expr(1))
@@ -326,6 +332,3 @@ run_interpreter()
 # To code in Pseudo++, one must have file called "program.pseudo", and write its code in it.
 
 # TODO
-# ujemne liczby
-# else if
-# poprawnie działające funkcje xd
