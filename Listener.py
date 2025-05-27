@@ -3,7 +3,7 @@ from PseudoListener import PseudoListener
 from PseudoParser import PseudoParser
 from PseudoVisitor import PseudoVisitor
 from Memory import Memory
-from PseudoExceptions import throw_var_redeclaration_exception, throw_wrong_type_exception
+from PseudoExceptions import throw_var_redeclaration_exception, throw_wrong_type_exception,throw_non_redeclaration_in_function_def
 import re
 
 class Listener(PseudoListener):
@@ -18,16 +18,20 @@ class Listener(PseudoListener):
         return_type = ctx.type_.text
         body = ctx.block
 
-        params = []
+        params = {}
         if ctx.paramList():
             for param_ctx in ctx.paramList().param():
                 param_type = param_ctx.TYPE().getText()
                 param_name = param_ctx.ID().getText()
-                params.append((param_name, param_type))
+                if(param_name in params.keys()):
+                    throw_non_redeclaration_in_function_def(ctx.start.line, ctx.start.column, param_name, ctx.start.line)
+                else:
+                    params[param_name] =  param_type
 
         self.memory.functions[name] = {"return_type": return_type,
                                        "params": params,
-                                       "body": body
+                                       "body": body,
+                                       "decl_line": ctx.start.line
                                        }
         
     def exitFunctionDef(self, ctx):

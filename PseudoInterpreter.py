@@ -5,7 +5,7 @@ from PseudoParser import PseudoParser
 from SyntaxErrorListener import SyntaxErrorListener
 from Listener import Listener
 from Memory import Memory
-from PseudoExceptions import throw_unknown_operator_exception, throw_undefined_name_exception, throw_wrong_type_exception, throw_non_defined_function_exception
+from PseudoExceptions import throw_unknown_operator_exception, throw_undefined_name_exception, throw_wrong_type_exception, throw_non_defined_function_exception,throw_non_redeclaration_in_function_def
 import re
 import copy
 
@@ -212,18 +212,23 @@ class PseudoInterpreter(PseudoVisitor):
         if len(args) != len(func["params"]):
             raise Exception("Wrong parameters number!")
 
-        for param, arg in zip(func["params"], args):
-            if not isinstance(arg, type_map[param[1]]):
+        for param, arg in zip(func["params"], args):  
+
+            var_name = param
+            var_type = func["params"][var_name]
+
+            if not isinstance(arg, type_map[var_type]):
                 raise Exception("Wrong parameter type!")
             
-            var_type = param[1]
-            var_name = param[0]
             decl_line = ctx.start.line
-
-            local_memory.variables[var_name] = {"value": arg,
-                                             "type": var_type,
-                                             "decl_line": decl_line
-                                             }
+            if var_name in local_memory.variables.keys():
+                decl_line = func["decl_line"]
+                throw_non_redeclaration_in_function_def(ctx.start.line, ctx.start.column, var_name, decl_line)
+            else:
+                local_memory.variables[var_name] = {"value": arg,
+                                                "type": var_type,
+                                                "decl_line": decl_line
+                                                }
 
         try:
             interpreter = PseudoInterpreter(local_memory)
@@ -288,11 +293,14 @@ class PseudoInterpreter(PseudoVisitor):
             condition = self.visit(ctx.expr())
             
     def visitForStatement(self, ctx: PseudoParser.ForStatementContext):
+        if ctx.varDeclStatement():
+            self.visit(ctx.varDeclStatement())
         condition = self.visit(ctx.expr())
         if not isinstance(condition, bool):
             throw_wrong_type_exception(ctx.start.line, ctx.start.column, "boolean")
         while condition:
             for stmt in ctx.body().statement():
+                print(stmt.getText())
                 self.visit(stmt)
             if ctx.assignmentStatement():
                 self.visit(ctx.assignmentStatement())

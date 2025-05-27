@@ -12,3 +12,6 @@ def throw_wrong_type_exception(line, col, var_type):
 
 def throw_non_defined_function_exception(line, col, fun_name):
         raise Exception(f"Error in line: {line}, column: {col}: function {fun_name} is non-defined.")
+
+def throw_non_redeclaration_in_function_def(line, col, name, line_defined):
+        raise Exception(f"Error in line: {line}, column: {col}: you can't have two arguments ({name}) with the same name, in function definition line: {line_defined}.")
