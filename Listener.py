@@ -58,8 +58,7 @@ class Listener(PseudoListener):
             var_id = ctx.ID().getText()
             var_type = ctx.TYPE().getText()
             decl_line = ctx.start.line
-            print(f"Declaring variable {var_id} of type {var_type} at line {decl_line} in scope {self.memory.name}")
-            if self.memory.check_var(var_id):
+            if var_id in self.memory.variables.keys():
                 decl_line = self.memory.variables[var_id]["decl_line"]
                 throw_var_redeclaration_exception(
                     ctx.start.line, ctx.start.column, var_id, decl_line
@@ -78,7 +77,7 @@ class Listener(PseudoListener):
         self.memory = new_scope
 
     def exitWhileStatement(self, ctx):
-        self.memory = self.memory.parent        
+        self.memory = self.memory.parent  
 
     def exitForStatement(self, ctx: PseudoParser.ForStatementContext):
         self.memory = self.memory.parent

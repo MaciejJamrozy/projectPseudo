@@ -401,7 +401,6 @@ class PseudoInterpreter(PseudoVisitor):
 
     def visitWhileStatement(self, ctx: PseudoParser.WhileStatementContext):
         self.memory = self.memory.get_child(f"while_scope_line_{ctx.start.line}")
-
         condition = self.visit(ctx.expr())
         if not isinstance(condition, bool):
             throw_wrong_type_exception(ctx.start.line, ctx.start.column, "boolean")
