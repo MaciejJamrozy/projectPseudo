@@ -44,6 +44,7 @@ class PseudoInterpreter(PseudoVisitor):
         elif ctx.NUMBER() or ctx.DOUBLE():
             return self.get_nummeric_value(ctx.getText())
         
+        
         elif ctx.op and ctx.op.type == PseudoParser.PLUS:
             left_value = self.visit(ctx.expr(0))
             right_value = self.visit(ctx.expr(1))
@@ -161,42 +162,88 @@ class PseudoInterpreter(PseudoVisitor):
         else:
             return self.visitChildren(ctx)
         
+
+    def visitVarDeclStatement(self, ctx):
+        var_id = ctx.ID().getText()
+        var_type = ctx.TYPE().getText()
+        decl_line = ctx.start.line
+        if ctx.op:
+            value = str(self.visit(ctx.expr()))
+            try:
+                if var_type == 'string':
+                    if not re.fullmatch(r'(?:\\.|(?!(["\'])).)*', value):
+                        raise ValueError
+
+                elif var_type == 'int':
+                    if not re.fullmatch(r'-?\d+', value):
+                        raise ValueError
+                    value = int(value)
+
+                elif var_type == 'float':
+                    if not re.fullmatch(r'-?\d+\.\d+', value):
+                        raise ValueError
+                    value = float(value)
+
+                elif var_type == 'boolean':
+                    if not value.lower() in ["true", "false"]:
+                        raise ValueError
+                    value = value.lower() == "true"
+
+                else:
+                    throw_wrong_type_exception(ctx.start.line, ctx.start.column, var_type)
+            except Exception as e:
+                throw_wrong_type_exception(ctx.start.line, ctx.start.column, var_type)
+
+            self.memory.set_value(var_id, value)
+    
     def visitAssignmentStatement(self, ctx):
-        print(ctx.parentCtx)
         var_id = ctx.ID().getText()
         var_type = self.memory.get_var(var_id)["type"]
-        value = str(self.visit(ctx.expr()))
-        
-        if self.memory.check_var(var_id) is False:
-            throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id)
-        
-        try:
-            if var_type == 'string':
-                if not re.fullmatch(r'(?:\\.|(?!(["\'])).)*', value):
-                    raise ValueError
-
-            elif var_type == 'int':
-                if not re.fullmatch(r'-?\d+', value):
-                    raise ValueError
-                value = int(value)
-
-            elif var_type == 'float':
-                if not re.fullmatch(r'-?\d+\.\d+', value):
-                    raise ValueError
-                value = float(value)
-
-            elif var_type == 'boolean':
-                if not value.lower() in ["true", "false"]:
-                    raise ValueError
-                value = value.lower() == "true"
-
+        if ctx.op and ctx.op.type == PseudoParser.INCREMENT:
+            val = self.memory.get_var(var_id)["value"]
+            if not (isinstance(val, str)):
+                if isinstance(val, int):
+                    self.memory.set_value(ctx.expr(0).getText(), val + 1)
+                    return val + 1
+                elif isinstance(val, float):
+                    self.memory.set_value(ctx.expr(0).getText(), val + 1.0)
+                    return val + 1.0
+                else:
+                    throw_wrong_type_exception(ctx.start.line, ctx.start.column, type(val).__name__)
             else:
+                throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, type(right_value).__name__)
+        else:
+            value = str(self.visit(ctx.expr()))
+            if self.memory.check_var(var_id) is False:
+                throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id)
+            
+            try:
+                if var_type == 'string':
+                    if not re.fullmatch(r'(?:\\.|(?!(["\'])).)*', value):
+                        raise ValueError
+
+                elif var_type == 'int':
+                    if not re.fullmatch(r'-?\d+', value):
+                        raise ValueError
+                    value = int(value)
+
+                elif var_type == 'float':
+                    if not re.fullmatch(r'-?\d+\.\d+', value):
+                        raise ValueError
+                    value = float(value)
+
+                elif var_type == 'boolean':
+                    if not value.lower() in ["true", "false"]:
+                        raise ValueError
+                    value = value.lower() == "true"
+
+                else:
+                    throw_wrong_type_exception(ctx.start.line, ctx.start.column, var_type)
+            
+            except Exception:
                 throw_wrong_type_exception(ctx.start.line, ctx.start.column, var_type)
-        
-        except Exception:
-            throw_wrong_type_exception(ctx.start.line, ctx.start.column, var_type)
-        
-        self.memory.set_value(var_id, value)
+            
+            self.memory.set_value(var_id, value)
 
     def call_function(self, name, args, ctx):
         func = self.functions.functions[name]
@@ -227,7 +274,6 @@ class PseudoInterpreter(PseudoVisitor):
                 self.memory.set_var(var_name, arg, decl_line, var_type)
 
         for stmt in func["body"].statement():
-            print(f"Executing function '{name}' at line {ctx.start.line} {stmt.getText()}")
             self.visit(stmt)
     
     def visitReturnStatement(self, ctx):

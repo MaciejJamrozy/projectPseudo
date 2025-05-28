@@ -14,13 +14,14 @@ statement:
 
 printStatement: ('print' | 'shout') '(' expr ')';
 
-assignmentStatement: ID op = ('=' | 'is' | '<<' | '<-') expr;
+assignmentStatement:
+	ID op = ('=' | 'is' | '<<' | '<-') expr
+	| ID op = ('++' | '--');
 
 ifStatement:
-    'if' ( '(' expr ')' | expr ) (':' | 'then') body
-    ( 'elseif' ( '(' expr ')' | expr ) (':' | 'then') body )*
-    ('else' ':' body)?
-    'end' ('if')?;
+	'if' ('(' expr ')' | expr) (':' | 'then') body (
+		'elseif' ('(' expr ')' | expr) (':' | 'then') body
+	)* ('else' ':' body)? 'end' ('if')?;
 
 whileStatement: 'while' '(' expr ')' ':' body 'end' ('loop')?;
 
@@ -97,6 +98,8 @@ MINUS: '-';
 MULT: '*';
 DIV: '/';
 INTDIV: '//';
+INCREMENT: '++';
+DECREMENT: '--';
 GREATER: '>' | 'greater than';
 SMALLER: '<' | 'smaller than';
 EQUAL: '==' | 'equals';
