@@ -333,6 +333,19 @@ def run_interpreter(fileStream=None):
 
 run_interpreter()
 
-# To code in Pseudo++, one must have file called "program.pseudo", and write its code in it.
-
 # TODO
+# Zarządzanie pamięcią, stos (obsługa przepełnienia go), scopy - Maciek
+# Zrobienie testów - Maciek
+# Globalne zmienne - Maciek
+# Zaawansowana diagnostyka błędów
+# Dopracowanie pętli - Robert
+# Rzutowanie typów - Robert
+# Napisanie dokumentacji - Kacper
+
+# dodatkowe TODO, fajne rzeczy nietrudne do zrobienia:
+# Importy (zeby dało się zrobić: "import anotherProgram.pseudo"
+# Biblioteka standardowa języka, z podstawowymi funkcjami typu: sqrt, time
+# REPL (Read-Eval-Print Loop) - bardzo ciekawa rzecz ale nie wiem jak trudna - Interaktywny tryb działania interpretera – użytkownik wpisuje linijki kodu i otrzymuje natychmiastowy wynik.
+
+# trudne (ale fajne), dodatkowe TODO:
+# Listy / tablice: z operacjami indeksowania, długości, dodawania/uzupełniania.
