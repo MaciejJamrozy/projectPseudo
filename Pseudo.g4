@@ -74,6 +74,7 @@ expr: ('input' | 'scan' | 'listen') '(' (STRING)? ')'
 	| expr AND expr
 	| expr OR expr
 	| op = NOT expr
+	| op = PARENT expr
 	| '(' expr ')'
 	| STRING
 	| NUMBER
@@ -107,6 +108,7 @@ DIFFERENT: '!=' | 'differs';
 AND: '&&' | 'and';
 OR: '||' | 'or';
 NOT: '!' | 'not';
+PARENT: 'parent::';
 
 TYPE:
 	TYPE_INT

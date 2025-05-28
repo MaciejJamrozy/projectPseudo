@@ -13,6 +13,7 @@ from PseudoExceptions import (
     throw_non_defined_function_exception,
     throw_non_redeclaration_in_function_def,throw_var_redeclaration_exception,
     throw_unknown_operator_exception,
+    throw_no_parent_scope_exception,
 )
 import re
 
@@ -51,6 +52,17 @@ class PseudoInterpreter(PseudoVisitor):
 
         elif ctx.NUMBER() or ctx.DOUBLE():
             return self.get_nummeric_value(ctx.getText())
+        
+        elif ctx.op and ctx.op.type == PseudoParser.PARENT:
+            if self.memory.parent:
+                current_mem = self.memory
+                self.memory = self.memory.parent
+                val = self.visit(ctx.expr(0))
+                self.memory = current_mem
+                return val
+            else:
+                throw_no_parent_scope_exception(ctx.start.line, ctx.start.column)
+
 
         elif ctx.op and ctx.op.type == PseudoParser.PLUS:
             left_value = self.visit(ctx.expr(0))
