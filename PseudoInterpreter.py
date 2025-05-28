@@ -201,17 +201,20 @@ class PseudoInterpreter(PseudoVisitor):
         var_type = self.memory.get_var(var_id)["type"]
         if ctx.op and ctx.op.type == PseudoParser.INCREMENT:
             val = self.memory.get_var(var_id)["value"]
-            if not (isinstance(val, str)):
-                if isinstance(val, int):
-                    self.memory.set_value(ctx.expr(0).getText(), val + 1)
-                    return val + 1
-                elif isinstance(val, float):
-                    self.memory.set_value(ctx.expr(0).getText(), val + 1.0)
-                    return val + 1.0
-                else:
-                    throw_wrong_type_exception(ctx.start.line, ctx.start.column, type(val).__name__)
+            if isinstance(val, int):
+                self.memory.set_value(var_id, val + 1)
+            elif isinstance(val, float):
+                self.memory.set_value(var_id, val + 1.0)
             else:
-                throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, type(right_value).__name__)
+                throw_wrong_type_exception(ctx.start.line, ctx.start.column, type(val).__name__)
+        elif ctx.op and ctx.op.type == PseudoParser.DECREMENT:
+            val = self.memory.get_var(var_id)["value"]
+            if isinstance(val, int):
+                self.memory.set_value(var_id, val - 1)
+            elif isinstance(val, float):
+                self.memory.set_value(var_id, val - 1.0)
+            else:
+                throw_wrong_type_exception(ctx.start.line, ctx.start.column, type(val).__name__)
         else:
             value = str(self.visit(ctx.expr()))
             if self.memory.check_var(var_id) is False:
