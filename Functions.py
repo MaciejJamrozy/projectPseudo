@@ -7,9 +7,9 @@ class Functions:
             "return_type": return_type,
             "params": params,
             "body": body,
-            "decl_line": decl_line if decl_line is not None else -1
+            "decl_line": decl_line if decl_line is not None else -1,
         }
-    
+
     def get_fun(self, fun_name):
         if fun_name in self.functions:
             return self.functions[fun_name]

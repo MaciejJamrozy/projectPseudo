@@ -6,26 +6,33 @@ from SyntaxErrorListener import SyntaxErrorListener
 from Listener import Listener
 from Memory import Memory
 from Functions import Functions
-from PseudoExceptions import throw_unknown_operator_exception, throw_undefined_name_exception, throw_wrong_type_exception, throw_non_defined_function_exception,throw_non_redeclaration_in_function_def
+from PseudoExceptions import (
+    throw_unsupported_operator_exception,
+    throw_undefined_name_exception,
+    throw_wrong_type_exception,
+    throw_non_defined_function_exception,
+    throw_non_redeclaration_in_function_def,
+    throw_unknown_operator_exception,
+)
 import re
-import copy
+
 
 class PseudoInterpreter(PseudoVisitor):
-    def __init__(self, memory: Memory,functions: Functions):
+    def __init__(self, memory: Memory, functions: Functions):
         self.memory = memory
         self.functions = functions
-    
+
     def visitPrintStatement(self, ctx):
         value = self.visit(ctx.expr())
         print(value)
-        
+
     def get_nummeric_value(self, var: str):
-        return float(var) if '.' in var else int(var)
-    
+        return float(var) if "." in var else int(var)
+
     def visitExpr(self, ctx):
-        if ctx.getChildCount() == 3 and ctx.getChild(0).getText() == '(':
+        if ctx.getChildCount() == 3 and ctx.getChild(0).getText() == "(":
             return self.visit(ctx.expr(0))
-        
+
         if ctx.ID():
             var_id = ctx.ID().getText()
             if self.memory.check_var(var_id) is False:
@@ -34,17 +41,16 @@ class PseudoInterpreter(PseudoVisitor):
                 return self.memory.get_var(var_id)["value"]
 
         elif ctx.STRING():
-            value = ctx.STRING().getText()[1:-1]  # Usuwanie cudzysłowów
+            value = ctx.STRING().getText()[1:-1]
             return bytes(value, "utf-8").decode("unicode_escape")
-        
+
         elif ctx.BOOL():
             value = ctx.BOOL().getText()
-            return value == 'true'
-        
+            return value == "true"
+
         elif ctx.NUMBER() or ctx.DOUBLE():
             return self.get_nummeric_value(ctx.getText())
-        
-        
+
         elif ctx.op and ctx.op.type == PseudoParser.PLUS:
             left_value = self.visit(ctx.expr(0))
             right_value = self.visit(ctx.expr(1))
@@ -55,50 +61,88 @@ class PseudoInterpreter(PseudoVisitor):
                 case (int() | float(), int() | float()):
                     return left_value + right_value
                 case _:
-                    throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, type(right_value).__name__)
-        elif ctx.op and ctx.op.type == PseudoParser.MINUS:  
+                    throw_unsupported_operator_exception(
+                        ctx.start.line,
+                        ctx.start.column,
+                        ctx.op.text,
+                        type(left_value).__name__,
+                        type(right_value).__name__,
+                    )
+
+        elif ctx.op and ctx.op.type == PseudoParser.MINUS:
             left_value = self.visit(ctx.expr(0))
-            if not(ctx.expr(1) is None):
+            if not (ctx.expr(1) is None):
                 right_value = self.visit(ctx.expr(1))
 
                 if not (isinstance(left_value, str) or isinstance(right_value, str)):
                     return left_value - right_value
                 else:
-                    throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, type(right_value).__name__)
+                    throw_unsupported_operator_exception(
+                        ctx.start.line,
+                        ctx.start.column,
+                        ctx.op.text,
+                        type(left_value).__name__,
+                        type(right_value).__name__,
+                    )
 
             else:
                 if isinstance(left_value, str):
-                    throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, "int/float")
+                    throw_unsupported_operator_exception(
+                        ctx.start.line,
+                        ctx.start.column,
+                        ctx.op.text,
+                        type(left_value).__name__,
+                        "int/float",
+                    )
                 return -left_value
-            
-        elif ctx.op and ctx.op.type == PseudoParser.MULT:  
+
+        elif ctx.op and ctx.op.type == PseudoParser.MULT:
             left_value = self.visit(ctx.expr(0))
             right_value = self.visit(ctx.expr(1))
             if not (isinstance(left_value, str) and isinstance(right_value, str)):
                 return left_value * right_value
             else:
-                throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, type(right_value).__name__)
-        
-        elif ctx.op and ctx.op.type == PseudoParser.DIV:  
+                throw_unsupported_operator_exception(
+                    ctx.start.line,
+                    ctx.start.column,
+                    ctx.op.text,
+                    type(left_value).__name__,
+                    type(right_value).__name__,
+                )
+
+        elif ctx.op and ctx.op.type == PseudoParser.DIV:
             left_value = self.visit(ctx.expr(0))
             right_value = self.visit(ctx.expr(1))
 
             if not (isinstance(left_value, str) or isinstance(right_value, str)):
-                if abs(right_value) < 1e-9: raise Exception("Cannot divide by zero")
+                if abs(right_value) < 1e-9:
+                    raise Exception("Cannot divide by zero")
                 return left_value / right_value
             else:
-                throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, type(right_value).__name__)
+                throw_unsupported_operator_exception(
+                    ctx.start.line,
+                    ctx.start.column,
+                    ctx.op.text,
+                    type(left_value).__name__,
+                    type(right_value).__name__,
+                )
 
-        elif ctx.op and ctx.op.type == PseudoParser.INTDIV:  
+        elif ctx.op and ctx.op.type == PseudoParser.INTDIV:
             left_value = self.visit(ctx.expr(0))
             right_value = self.visit(ctx.expr(1))
-            
+
             if not (isinstance(left_value, str) or isinstance(right_value, str)):
-                if abs(right_value) < 1e-9: raise Exception("Cannot divide by zero")
+                if abs(right_value) < 1e-9:
+                    raise Exception("Cannot divide by zero")
                 return left_value // right_value
             else:
-                throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, type(right_value).__name__)
-
+                throw_unsupported_operator_exception(
+                    ctx.start.line,
+                    ctx.start.column,
+                    ctx.op.text,
+                    type(left_value).__name__,
+                    type(right_value).__name__,
+                )
 
         elif ctx.op and ctx.op.type == PseudoParser.AND:
             left_value = self.visit(ctx.expr(0))
@@ -106,62 +150,96 @@ class PseudoInterpreter(PseudoVisitor):
             if isinstance(left_value, bool) and isinstance(right_value, bool):
                 return left_value and right_value
             else:
-                throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value.__name__, type(right_value).__name__))
-                
+                throw_unsupported_operator_exception(
+                    ctx.start.line,
+                    ctx.start.column,
+                    ctx.op.text,
+                    type(left_value.__name__, type(right_value).__name__),
+                )
+
         elif ctx.op and ctx.op.type == PseudoParser.OR:
             left_value = self.visit(ctx.expr(0))
             right_value = self.visit(ctx.expr(1))
             if isinstance(left_value, bool) and isinstance(right_value, bool):
                 return left_value or right_value
             else:
-                throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value.__name__, type(right_value).__name__))
-                                        
+                throw_unsupported_operator_exception(
+                    ctx.start.line,
+                    ctx.start.column,
+                    ctx.op.text,
+                    type(left_value.__name__, type(right_value).__name__),
+                )
+
         elif ctx.op and ctx.op.type == PseudoParser.NOT:
             value = self.visit(ctx.expr(0))
             if isinstance(value, bool):
                 return not value
             else:
-                raise Exception(f"Error in line: {ctx.start.line}, column: {ctx.start.column}: this value is not boolean.")
+                raise Exception(
+                    f"Error in line: {ctx.start.line}, column: {ctx.start.column}: this value is not boolean."
+                )
 
         elif ctx.op and ctx.op.type == PseudoParser.GREATER:
             left_value = self.visit(ctx.expr(0))
             right_value = self.visit(ctx.expr(1))
-            if isinstance(left_value, (int, float)) and isinstance(right_value, (int,float)):
+            if isinstance(left_value, (int, float)) and isinstance(
+                right_value, (int, float)
+            ):
                 return left_value > right_value
             elif isinstance(left_value, str) and isinstance(right_value, str):
                 return left_value > right_value
             else:
-                throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, type(right_value).__name__)
-
+                throw_unsupported_operator_exception(
+                    ctx.start.line,
+                    ctx.start.column,
+                    ctx.op.text,
+                    type(left_value).__name__,
+                    type(right_value).__name__,
+                )
 
         elif ctx.op and ctx.op.type == PseudoParser.SMALLER:
             left_value = self.visit(ctx.expr(0))
             right_value = self.visit(ctx.expr(1))
-            if isinstance(left_value, (int, float)) and isinstance(right_value, (int, float)):
+            if isinstance(left_value, (int, float)) and isinstance(
+                right_value, (int, float)
+            ):
                 return left_value < right_value
             elif isinstance(left_value, str) and isinstance(right_value, str):
                 return left_value < right_value
             else:
-                throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, type(right_value).__name__)
+                throw_unsupported_operator_exception(
+                    ctx.start.line,
+                    ctx.start.column,
+                    ctx.op.text,
+                    type(left_value).__name__,
+                    type(right_value).__name__,
+                )
 
         elif ctx.op and ctx.op.type == PseudoParser.EQUAL:
             left_value = self.visit(ctx.expr(0))
             right_value = self.visit(ctx.expr(1))
-            if isinstance(left_value, (int, float)) and isinstance(right_value, (int, float)):
+            if isinstance(left_value, (int, float)) and isinstance(
+                right_value, (int, float)
+            ):
                 return left_value == right_value
             elif isinstance(left_value, str) and isinstance(right_value, str):
                 return left_value == right_value
             else:
-                throw_unknown_operator_exception(ctx.start.line, ctx.start.column, ctx.op.text, type(left_value).__name__, type(right_value).__name__)
+                throw_unsupported_operator_exception(
+                    ctx.start.line,
+                    ctx.start.column,
+                    ctx.op.text,
+                    type(left_value).__name__,
+                    type(right_value).__name__,
+                )
 
         elif ctx.op and ctx.op.type == PseudoParser.DIFFERENT:
             left_value = self.visit(ctx.expr(0))
             right_value = self.visit(ctx.expr(1))
             return left_value != right_value
-                                                 
+
         else:
             return self.visitChildren(ctx)
-        
 
     def visitVarDeclStatement(self, ctx):
         var_id = ctx.ID().getText()
@@ -170,32 +248,34 @@ class PseudoInterpreter(PseudoVisitor):
         if ctx.op:
             value = str(self.visit(ctx.expr()))
             try:
-                if var_type == 'string':
+                if var_type == "string":
                     if not re.fullmatch(r'(?:\\.|(?!(["\'])).)*', value):
                         raise ValueError
 
-                elif var_type == 'int':
-                    if not re.fullmatch(r'-?\d+', value):
+                elif var_type == "int":
+                    if not re.fullmatch(r"-?\d+", value):
                         raise ValueError
                     value = int(value)
 
-                elif var_type == 'float':
-                    if not re.fullmatch(r'-?\d+\.\d+', value):
+                elif var_type == "float":
+                    if not re.fullmatch(r"-?\d+\.\d+", value):
                         raise ValueError
                     value = float(value)
 
-                elif var_type == 'boolean':
+                elif var_type == "boolean":
                     if not value.lower() in ["true", "false"]:
                         raise ValueError
                     value = value.lower() == "true"
 
                 else:
-                    throw_wrong_type_exception(ctx.start.line, ctx.start.column, var_type)
+                    throw_wrong_type_exception(
+                        ctx.start.line, ctx.start.column, var_type
+                    )
             except Exception as e:
                 throw_wrong_type_exception(ctx.start.line, ctx.start.column, var_type)
 
             self.memory.set_value(var_id, value)
-    
+
     def visitAssignmentStatement(self, ctx):
         var_id = ctx.ID().getText()
         var_type = self.memory.get_var(var_id)["type"]
@@ -206,7 +286,9 @@ class PseudoInterpreter(PseudoVisitor):
             elif isinstance(val, float):
                 self.memory.set_value(var_id, val + 1.0)
             else:
-                throw_wrong_type_exception(ctx.start.line, ctx.start.column, type(val).__name__)
+                throw_wrong_type_exception(
+                    ctx.start.line, ctx.start.column, type(val).__name__
+                )
         elif ctx.op and ctx.op.type == PseudoParser.DECREMENT:
             val = self.memory.get_var(var_id)["value"]
             if isinstance(val, int):
@@ -214,38 +296,42 @@ class PseudoInterpreter(PseudoVisitor):
             elif isinstance(val, float):
                 self.memory.set_value(var_id, val - 1.0)
             else:
-                throw_wrong_type_exception(ctx.start.line, ctx.start.column, type(val).__name__)
+                throw_unknown_operator_exception(
+                    ctx.start.line, ctx.start.column, ctx.op.text
+                )
         else:
             value = str(self.visit(ctx.expr()))
             if self.memory.check_var(var_id) is False:
                 throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id)
-            
+
             try:
-                if var_type == 'string':
+                if var_type == "string":
                     if not re.fullmatch(r'(?:\\.|(?!(["\'])).)*', value):
                         raise ValueError
 
-                elif var_type == 'int':
-                    if not re.fullmatch(r'-?\d+', value):
+                elif var_type == "int":
+                    if not re.fullmatch(r"-?\d+", value):
                         raise ValueError
                     value = int(value)
 
-                elif var_type == 'float':
-                    if not re.fullmatch(r'-?\d+\.\d+', value):
+                elif var_type == "float":
+                    if not re.fullmatch(r"-?\d+\.\d+", value):
                         raise ValueError
                     value = float(value)
 
-                elif var_type == 'boolean':
+                elif var_type == "boolean":
                     if not value.lower() in ["true", "false"]:
                         raise ValueError
                     value = value.lower() == "true"
 
                 else:
-                    throw_wrong_type_exception(ctx.start.line, ctx.start.column, var_type)
-            
+                    throw_wrong_type_exception(
+                        ctx.start.line, ctx.start.column, var_type
+                    )
+
             except Exception:
                 throw_wrong_type_exception(ctx.start.line, ctx.start.column, var_type)
-            
+
             self.memory.set_value(var_id, value)
 
     def call_function(self, name, args, ctx):
@@ -256,51 +342,51 @@ class PseudoInterpreter(PseudoVisitor):
             "float": float,
             "string": str,
             "boolean": bool,
-            "void": type(None)
-            }
+            "void": type(None),
+        }
 
         if len(args) != len(func["params"]):
             raise Exception("Wrong parameters number!")
 
-        for param, arg in zip(func["params"], args):  
+        for param, arg in zip(func["params"], args):
 
             var_name = param
             var_type = func["params"][var_name]
             if not isinstance(arg, type_map[var_type]):
                 raise Exception("Wrong parameter type!")
-            
+
             decl_line = ctx.start.line
             if var_name in self.memory.variables.keys():
                 decl_line = func["decl_line"]
-                throw_non_redeclaration_in_function_def(ctx.start.line, ctx.start.column, var_name, decl_line)
+                throw_non_redeclaration_in_function_def(
+                    ctx.start.line, ctx.start.column, var_name, decl_line
+                )
             else:
                 self.memory.set_var(var_name, arg, decl_line, var_type)
 
         for stmt in func["body"].statement():
             self.visit(stmt)
-    
+
     def visitReturnStatement(self, ctx):
-            value = self.visit(ctx.val)
-            raise ReturnException(value)
-    
+        value = self.visit(ctx.val)
+        raise ReturnException(value)
+
     def visitFunctionDef(self, ctx):
         return None
-    
+
     def visitIfStatement(self, ctx: PseudoParser.IfStatementContext):
         if self.visit(ctx.expr(0)):
             for stmt in ctx.body(0).statement():
                 self.visit(stmt)
             return
 
-        # Sprawdź wszystkie elseif-y
-        num_elseif = len(ctx.expr()) - 1  # pierwszy expr to 'if', reszta to 'elseif'
+        num_elseif = len(ctx.expr()) - 1
         for i in range(num_elseif):
             if self.visit(ctx.expr(i + 1)):
                 for stmt in ctx.body(i + 1).statement():
                     self.visit(stmt)
                 return
 
-        # else (jeśli istnieje)
         if ctx.body(num_elseif + 1) is not None:
             for stmt in ctx.body(num_elseif + 1).statement():
                 self.visit(stmt)
@@ -314,13 +400,11 @@ class PseudoInterpreter(PseudoVisitor):
                 self.visit(stmt)
             condition = self.visit(ctx.expr())
 
-    
-
     def visitForStatement(self, ctx: PseudoParser.ForStatementContext):
         self.memory = self.memory.get_child(f"for_scope_line_{ctx.start.line}")
         if ctx.varDeclStatement():
             self.visitAssignmentStatement(ctx.varDeclStatement())
-                
+
         condition = self.visit(ctx.expr())
         while condition:
             if not isinstance(condition, bool):
@@ -333,14 +417,18 @@ class PseudoInterpreter(PseudoVisitor):
             condition = self.visit(ctx.expr())
         self.memory = self.memory.parent
 
-    def visitFunctionCallStatement(self, ctx: PseudoParser.FunctionCallStatementContext):
+    def visitFunctionCallStatement(
+        self, ctx: PseudoParser.FunctionCallStatementContext
+    ):
         new_scope = Memory(name=f"function_scope_line_{ctx.start.line}")
         self.memory.add_child(new_scope)
-        self.memory = new_scope   
+        self.memory = new_scope
         name = ctx.ID().getText()
         func = self.functions.get_fun(name)
         if name not in self.functions.functions.keys():
-            throw_non_defined_function_exception(ctx.start.line, ctx.start.column, ctx.name.text)
+            throw_non_defined_function_exception(
+                ctx.start.line, ctx.start.column, ctx.name.text
+            )
         args = []
         if ctx.argumentList():
             for expr_ctx in ctx.argumentList().expr():
@@ -351,18 +439,22 @@ class PseudoInterpreter(PseudoVisitor):
         except ReturnException as ret:
             self.memory = self.memory.parent
             return ret.value
-            
+
+
 class ReturnException(Exception):
     def __init__(self, value):
         self.value = value
 
+
 def run_interpreter(fileStream=None):
     try:
-        inputStream = fileStream if fileStream else FileStream('program.pseudo', encoding='utf-8')
+        inputStream = (
+            fileStream if fileStream else FileStream("program.pseudo", encoding="utf-8")
+        )
         lexer = PseudoLexer(inputStream)
         stream = CommonTokenStream(lexer)
         parser = PseudoParser(stream)
-        
+
         parser.removeErrorListeners()
         parser.addErrorListener(SyntaxErrorListener())
 
@@ -370,28 +462,29 @@ def run_interpreter(fileStream=None):
 
         memory = Memory()
         functions = Functions()
-        interpreter = PseudoInterpreter(memory,functions)
-        listener = Listener(memory, interpreter,functions)
+        interpreter = PseudoInterpreter(memory, functions)
+        listener = Listener(memory, interpreter, functions)
         walker = ParseTreeWalker()
         walker.walk(listener, tree)
         interpreter.visit(tree)
-    
+
     except Exception as e:
         print(e)
         return
+
 
 run_interpreter()
 
 # TODO
 # Zarządzanie pamięcią, stos (obsługa przepełnienia go), scopy - Maciek
 # Zrobienie testów - Maciek
-# Globalne zmienne - Maciek
+# Zrobić porządek w gramatyce - Maciek
 # Zaawansowana diagnostyka błędów
-# Dopracowanie pętli - Robert
 # Rzutowanie typów - Robert
 # Napisanie dokumentacji - Kacper
 
 # dodatkowe TODO, fajne rzeczy nietrudne do zrobienia:
+# dopracowanie języka: obsługa skróconych operatorów '+=', '-+' '*=' ...
 # Importy (zeby dało się zrobić: "import anotherProgram.pseudo"
 # Biblioteka standardowa języka, z podstawowymi funkcjami typu: sqrt, time
 # REPL (Read-Eval-Print Loop) - bardzo ciekawa rzecz ale nie wiem jak trudna - Interaktywny tryb działania interpretera – użytkownik wpisuje linijki kodu i otrzymuje natychmiastowy wynik.
