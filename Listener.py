@@ -37,6 +37,17 @@ class Listener(PseudoListener):
     def exitFunctionDef(self, ctx):
         self.inFunctionDef = False
 
+
+    def enterFunctionCallStatement(self, ctx):
+        print(f"Entering function call: {ctx.ID().getText()} at line {ctx.start.line}")
+        new_scope = Memory(name=f"function_scope_line_{ctx.start.line}")
+        self.memory.add_child(new_scope)
+        self.memory = new_scope  
+
+
+    def exitFunctionCallStatement(self, ctx):
+        self.memory = self.memory.parent
+
     def enterVarDeclStatement(self, ctx:PseudoParser.VarDeclStatementContext):
         if self.inFunctionDef:
             return
@@ -44,6 +55,7 @@ class Listener(PseudoListener):
             var_id = ctx.ID().getText()
             var_type = ctx.TYPE().getText()
             decl_line = ctx.start.line
+            print(f"Declaring variable {var_id} of type {var_type} at line {decl_line} in scope {self.memory.name}")
             if self.memory.check_var(var_id):
                 decl_line = self.memory.variables[var_id]["decl_line"]
                 throw_var_redeclaration_exception(ctx.start.line, ctx.start.column, var_id, decl_line)
@@ -53,7 +65,14 @@ class Listener(PseudoListener):
         new_scope = Memory(name=f"for_scope_line_{ctx.start.line}")
         self.memory.add_child(new_scope)
         self.memory = new_scope
-        
+
+    def enterWhileStatement(self, ctx):
+        new_scope = Memory(name=f"while_scope_line_{ctx.start.line}")
+        self.memory.add_child(new_scope)
+        self.memory = new_scope
+
+    def exitWhileStatement(self, ctx):
+        self.memory = self.memory.parent        
 
     def exitForStatement(self, ctx: PseudoParser.ForStatementContext):
         self.memory = self.memory.parent

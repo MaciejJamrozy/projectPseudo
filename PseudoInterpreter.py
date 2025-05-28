@@ -6,7 +6,7 @@ from SyntaxErrorListener import SyntaxErrorListener
 from Listener import Listener
 from Memory import Memory
 from Functions import Functions
-from PseudoExceptions import throw_unknown_operator_exception, throw_undefined_name_exception, throw_wrong_type_exception, throw_non_defined_function_exception,throw_non_redeclaration_in_function_def
+from PseudoExceptions import throw_unknown_operator_exception, throw_undefined_name_exception, throw_wrong_type_exception, throw_non_defined_function_exception,throw_non_redeclaration_in_function_def,throw_var_redeclaration_exception
 import re
 import copy
 
@@ -14,6 +14,7 @@ class PseudoInterpreter(PseudoVisitor):
     def __init__(self, memory: Memory,functions: Functions):
         self.memory = memory
         self.functions = functions
+        self.inFunctionCall = False
     
     def visitPrintStatement(self, ctx):
         value = self.visit(ctx.expr())
@@ -25,7 +26,6 @@ class PseudoInterpreter(PseudoVisitor):
     def visitExpr(self, ctx):
         if ctx.getChildCount() == 3 and ctx.getChild(0).getText() == '(':
             return self.visit(ctx.expr(0))
-        
         if ctx.ID():
             var_id = ctx.ID().getText()
             if self.memory.check_var(var_id) is False:
@@ -167,6 +167,13 @@ class PseudoInterpreter(PseudoVisitor):
         var_id = ctx.ID().getText()
         var_type = ctx.TYPE().getText()
         decl_line = ctx.start.line
+
+        if self.inFunctionCall:
+            if self.memory.check_var(var_id):
+                decl_line = self.memory.variables[var_id]["decl_line"]
+                throw_var_redeclaration_exception(ctx.start.line, ctx.start.column, var_id, decl_line)
+            else:
+                self.memory.set_var(var_id, None, decl_line, var_type)
         if ctx.op:
             value = str(self.visit(ctx.expr()))
             try:
@@ -193,7 +200,7 @@ class PseudoInterpreter(PseudoVisitor):
                     throw_wrong_type_exception(ctx.start.line, ctx.start.column, var_type)
             except Exception as e:
                 throw_wrong_type_exception(ctx.start.line, ctx.start.column, var_type)
-
+        if self.memory.check_var(var_id):
             self.memory.set_value(var_id, value)
     
     def visitAssignmentStatement(self, ctx):
@@ -306,6 +313,8 @@ class PseudoInterpreter(PseudoVisitor):
                 self.visit(stmt)
 
     def visitWhileStatement(self, ctx: PseudoParser.WhileStatementContext):
+        self.memory = self.memory.get_child(f"while_scope_line_{ctx.start.line}")
+
         condition = self.visit(ctx.expr())
         if not isinstance(condition, bool):
             throw_wrong_type_exception(ctx.start.line, ctx.start.column, "boolean")
@@ -313,6 +322,9 @@ class PseudoInterpreter(PseudoVisitor):
             for stmt in ctx.body().statement():
                 self.visit(stmt)
             condition = self.visit(ctx.expr())
+        self.memory = self.memory.parent
+
+
 
     
 
@@ -334,9 +346,9 @@ class PseudoInterpreter(PseudoVisitor):
         self.memory = self.memory.parent
 
     def visitFunctionCallStatement(self, ctx: PseudoParser.FunctionCallStatementContext):
-        new_scope = Memory(name=f"function_scope_line_{ctx.start.line}")
-        self.memory.add_child(new_scope)
-        self.memory = new_scope   
+        self.inFunctionCall = True
+        self.memory = self.memory.get_child(f"function_scope_line_{ctx.start.line}") 
+
         name = ctx.ID().getText()
         func = self.functions.get_fun(name)
         if name not in self.functions.functions.keys():
@@ -348,8 +360,10 @@ class PseudoInterpreter(PseudoVisitor):
         try:
             self.call_function(name, args, ctx)
             self.memory = self.memory.parent
+            self.inFunctionCall = False
         except ReturnException as ret:
             self.memory = self.memory.parent
+            self.inFunctionCall = False
             return ret.value
             
 class ReturnException(Exception):
