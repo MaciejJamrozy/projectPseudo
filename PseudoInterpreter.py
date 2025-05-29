@@ -544,6 +544,7 @@ run_interpreter()
 # Zaawansowana diagnostyka błędów
 # Rzutowanie typów - Robert
 # Napisanie dokumentacji - Kacper
+# Dorobić operatory: ">=" "<="
 
 # dodatkowe TODO, fajne rzeczy nietrudne do zrobienia:
 # dopracowanie języka: obsługa skróconych operatorów '+=', '-+' '*=' ...

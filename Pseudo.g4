@@ -14,9 +14,10 @@ statement:
 
 printStatement: ('print' | 'shout') '(' expr ')';
 
-assignmentStatement:
-	ID op = ('=' | 'is' | '<<' | '<-') expr
-	| ID op = ('++' | '--');
+assignmentStatement
+	: ID op = ('=' | 'is' | '<<' | '<-') expr
+	| ID op = ('++' | '--')
+	;
 
 ifStatement:
 	'if' ('(' expr ')' | expr) (':' | 'then') body (

@@ -222,3 +222,69 @@ def test_function_with_inner_variable_scope(capsys):
     run_interpreter(inputStream=input_stream)
     captured = capsys.readouterr().out.strip().splitlines()
     assert captured == ["10", "5"]
+
+
+def test_complex_function(capsys):
+    code = """
+    function add(int a, int b) -> int:
+        int result;
+        result = a + b;
+        return result;
+    end function;
+
+    function multiply_and_add(int x, int y, int z) -> int:
+        int product;
+        int sum;
+        product = x * y;
+        sum = add(product, z);
+        return sum;
+    end function;
+
+    int result;
+    result = multiply_and_add(2, 3, 4);
+    print(result);
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+    assert capsys.readouterr().out.strip() == "10"
+
+
+def test_advanced_function_logic(capsys):
+    code = """
+    function factorial(int n) -> int:
+        if n == 0:
+            return 1;
+        else:
+            return n * factorial(n - 1);
+        end if;
+    end function;
+
+    function fib(int n) -> int:
+        if n == 0:
+            return 0;
+        else:
+            if n == 1:
+                return 1;
+            else:
+                return fib(n - 1) + fib(n - 2);
+            end if;
+        end if;
+    end function;
+
+    function main() -> int:
+        int fact5;
+        int fib5;
+        fact5 = factorial(5);
+        fib5 = fib(5);
+        print(fact5);
+        print(fib5);
+        return 0;
+    end function;
+
+    main();
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+
+    captured = capsys.readouterr().out.strip().splitlines()
+    assert captured == ["120", "5"]
