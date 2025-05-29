@@ -75,6 +75,7 @@ expr: ('input' | 'scan' | 'listen') '(' (STRING)? ')'
 	| expr OR expr
 	| op = NOT expr
 	| op = PARENT expr
+	| '(' op = TYPE ')' expr
 	| '(' expr ')'
 	| STRING
 	| NUMBER

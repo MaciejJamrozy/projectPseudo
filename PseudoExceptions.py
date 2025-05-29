@@ -41,3 +41,8 @@ def throw_no_parent_scope_exception(line, col):
     raise Exception(
         f"Error in line: {line}, column: {col}: no parent scope found, cannot access parent variables."
     )
+
+def throw_conversion_exception(line, col, from_type, to_type):
+    raise Exception(
+        f"Error in line: {line}, column: {col}: cannot convert from {from_type} to {to_type}."
+    )

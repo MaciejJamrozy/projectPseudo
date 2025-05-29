@@ -14,6 +14,7 @@ from PseudoExceptions import (
     throw_non_redeclaration_in_function_def,throw_var_redeclaration_exception,
     throw_unknown_operator_exception,
     throw_no_parent_scope_exception,
+    throw_conversion_exception
 )
 import re
 import random
@@ -63,6 +64,31 @@ class PseudoInterpreter(PseudoVisitor):
                 return val
             else:
                 throw_no_parent_scope_exception(ctx.start.line, ctx.start.column)
+
+        elif ctx.op and ctx.op.type == PseudoParser.TYPE:
+            print("Type conversion requested")
+            parse_type = ctx.TYPE().getText()
+            if ctx.expr(0):
+                value = self.visit(ctx.expr(0))
+                print(f"Converting {value} to {parse_type}")
+                try:
+                    if parse_type == "int":
+                        print(f"Converting {type(value)} to int")
+                        return int(value)
+                    elif parse_type == "float":
+                        return float(value)
+                    elif parse_type == "string":
+                        return str(value)
+                    elif parse_type == "boolean":
+                        return bool(value)
+                except Exception as e:
+                    throw_conversion_exception(
+                        ctx.start.line, ctx.start.column, parse_type, type(value).__name__
+                    )
+                    
+
+                
+
 
 
         elif ctx.op and ctx.op.type == PseudoParser.PLUS:
