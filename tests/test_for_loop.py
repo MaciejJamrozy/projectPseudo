@@ -140,33 +140,52 @@ def test_modify_loop_variable_inside_loop(capsys):
     assert captured == expected
 
 
-# def test_loop_with_continue(capsys):
-#     code = """
-#     for (int i = 0; i < 5; i++):
-#         if (i == 2):
-#             continue;
-#         print(i);
-#     end loop;
-#     """
-#     input_stream = InputStream(code)
-#     run_interpreter(inputStream=input_stream)
+def test_loop_with_continue(capsys):
+    code = """
+    for (int i = 0; i < 5; i++):
+        if (i == 2):
+            continue;
+        print(i);
+    end loop;
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
 
-#     captured = capsys.readouterr().out.strip().splitlines()
-#     expected = ["1", "3"]
-#     assert captured == expected
+    captured = capsys.readouterr().out.strip().splitlines()
+    expected = ["1", "3"]
+    assert captured == expected
 
 
-# def test_loop_with_break(capsys):
-#     code = """
-#     for (int i = 0; i < 5; i++):
-#         if (i == 3):
-#             break;
-#         print(i);
-#     end loop;
-#     """
-#     input_stream = InputStream(code)
-#     run_interpreter(inputStream=input_stream)
+def test_loop_with_break(capsys):
+    code = """
+    for (int i = 0; i < 5; i++):
+        if (i == 3):
+            break;
+        print(i);
+    end loop;
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
 
-#     captured = capsys.readouterr().out.strip().splitlines()
-#     expected = ["0", "1", "2"]
-#     assert captured == expected
+    captured = capsys.readouterr().out.strip().splitlines()
+    expected = ["0", "1", "2"]
+    assert captured == expected
+
+def test_loop_with_nested_break(capsys):
+    code = """
+    for (int i = 0; i < 3; i++):
+        print(i);
+        for (int j = 0; j < 2; j++):
+            if j==1:
+                break;
+            end if;
+            print(j);
+        end loop;
+    end loop;
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+
+    captured = capsys.readouterr().out.strip().splitlines()
+    expected = ["0", "0", "1", "0", "2", "0"]
+    assert captured == expected

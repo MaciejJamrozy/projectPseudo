@@ -60,32 +60,32 @@ def test_while_loop_with_float_variable(capsys):
     assert capsys.readouterr().out.strip().splitlines() == ["0.0", "0.5"]
 
 
-# def test_while_loop_with_continue(capsys):
-#     code = """
-#     int i = 0;
-#     while (i < 3):
-#         i = i + 1;
-#         if i == 2:
-#             continue;
-#         end if;
-#         print(i);
-#     end loop;
-#     """
-#     input_stream = InputStream(code)
-#     run_interpreter(inputStream=input_stream)
-#     assert capsys.readouterr().out.strip().splitlines() == ["1", "3"]
+def test_while_loop_with_continue(capsys):
+    code = """
+    int i = 0;
+    while (i < 3):
+        i = i + 1;
+        if i == 2:
+            continue;
+        end if;
+        print(i);
+    end loop;
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+    assert capsys.readouterr().out.strip().splitlines() == ["1", "3"]
 
-# def test_while_with_break_condition(capsys):
-#     code = """
-#     int i = 0;
-#     while (true):
-#         print(i);
-#         i = i + 1;
-#         if i == 2:
-#             break;
-#         end if;
-#     end loop;
-#     """
-#     input_stream = InputStream(code)
-#     run_interpreter(inputStream=input_stream)
-#     assert capsys.readouterr().out.strip().splitlines() == ["0", "1"]
+def test_while_with_break_condition(capsys):
+    code = """
+    int i = 0;
+    while (true):
+        print(i);
+        i = i + 1;
+        if i == 2:
+            break;
+        end if;
+    end loop;
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+    assert capsys.readouterr().out.strip().splitlines() == ["0", "1"]
