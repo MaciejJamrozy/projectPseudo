@@ -14,10 +14,9 @@ statement:
 
 printStatement: ('print' | 'shout') '(' expr ')';
 
-assignmentStatement
-	: ID op = ('=' | 'is' | '<<' | '<-') expr
-	| ID op = ('++' | '--')
-	;
+assignmentStatement:
+	ID op = ('=' | 'is' | '<<' | '<-') expr
+	| ID op = ('++' | '--');
 
 ifStatement:
 	'if' ('(' expr ')' | expr) (':' | 'then') body (
@@ -72,8 +71,8 @@ expr: ('input' | 'scan' | 'listen') '(' (STRING)? ')'
 	| expr op = (GREATER | SMALLER | EQUAL | DIFFERENT) expr
 	| expr op = INTDIV expr
 	| op = MINUS expr
-	| expr AND expr
-	| expr OR expr
+	| expr op = AND expr
+	| expr op = OR expr
 	| op = NOT expr
 	| op = PARENT expr
 	| '(' op = TYPE ')' expr
@@ -100,7 +99,7 @@ PLUS: '+';
 MINUS: '-';
 MULT: '*';
 DIV: '/';
-INTDIV: '//';
+INTDIV: '/#';
 INCREMENT: '++';
 DECREMENT: '--';
 GREATER: '>' | 'greater than';

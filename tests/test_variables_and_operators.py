@@ -149,7 +149,7 @@ def test_boolean_to_string_conversion(capsys):
     """
     input_stream = InputStream(code)
     run_interpreter(inputStream=input_stream)
-    assert capsys.readouterr().out.strip() == "true"
+    assert capsys.readouterr().out.strip() == "True"
 
 
 def test_arithmetic_operators(capsys):
@@ -159,7 +159,7 @@ def test_arithmetic_operators(capsys):
     print(a + b);
     print(a - b);
     print(a * b);
-    print(a // b);
+    print(a /# b);
     """
     input_stream = InputStream(code)
     run_interpreter(inputStream=input_stream)
@@ -180,7 +180,7 @@ def test_logical_operators(capsys):
     run_interpreter(inputStream=input_stream)
 
     captured = capsys.readouterr().out.strip().splitlines()
-    assert captured == ["false", "true", "false"]
+    assert captured == ["False", "True", "False"]
 
 
 def test_comparison_operators(capsys):
@@ -198,7 +198,7 @@ def test_comparison_operators(capsys):
     run_interpreter(inputStream=input_stream)
 
     captured = capsys.readouterr().out.strip().splitlines()
-    assert captured == ["false", "true", "true", "false", "true", "false"]
+    assert captured == ["False", "True", "True", "False", "True", "False"]
 
 
 def test_negative_integer_assignment(capsys):

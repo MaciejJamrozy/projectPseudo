@@ -301,9 +301,9 @@ class PseudoInterpreter(PseudoVisitor):
                     value = float(value)
 
                 elif var_type == "boolean":
-                    if not value.lower() in ["true", "false"]:
+                    if not str(value).lower() in ["true", "false"]:
                         raise ValueError
-                    value = value.lower() == "true"
+                    value = str(value).lower() == "true"
 
                 else:
                     throw_wrong_type_exception(
