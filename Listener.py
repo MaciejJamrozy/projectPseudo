@@ -43,20 +43,7 @@ class Listener(PseudoListener):
 
 
     def enterFunctionCallStatement(self, ctx):
-        # print(f"Entering function call: {ctx.ID().getText()} at line {ctx.start.line}")
-        fun_name = ctx.ID().getText()
-
-
-        if not self.functions.get_fun(fun_name):
-            throw_non_defined_function_exception(
-                ctx.start.line, ctx.start.column, fun_name
-            )
-        self.functions.call_fun(fun_name)
-
-        func = self.functions.get_fun(fun_name)
-
-
-        new_scope = Memory(name=f"function_test_scope_line_{fun_name}_call_{func["num_called"]}")
+        new_scope = Memory(name=f"function_listener_scope_line_{ctx.start.line}")
         self.memory.add_child(new_scope)
         self.memory = new_scope  
 

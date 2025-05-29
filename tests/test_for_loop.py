@@ -1,8 +1,11 @@
 from antlr4 import InputStream
 from io import StringIO
 import sys
-from PseudoInterpreter import run_interpreter
+import os
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from PseudoInterpreter import run_interpreter
 
 def test_for_loop():
     code = """

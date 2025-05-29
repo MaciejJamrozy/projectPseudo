@@ -12,3 +12,8 @@ PseudoVisitor.py
 command.txt
 *.pseudo
 .DS_Store
+.pytest_cache/
+tests/__pycache__/
+tests/.pytest_cache/
+venv/
+

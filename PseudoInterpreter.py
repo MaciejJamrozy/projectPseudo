@@ -16,6 +16,7 @@ from PseudoExceptions import (
     throw_no_parent_scope_exception,
 )
 import re
+import random
 
 
 class PseudoInterpreter(PseudoVisitor):
@@ -412,7 +413,12 @@ class PseudoInterpreter(PseudoVisitor):
                 self.visit(stmt)
 
     def visitWhileStatement(self, ctx: PseudoParser.WhileStatementContext):
-        self.memory = self.memory.get_child(f"while_scope_line_{ctx.start.line}")
+        if self.inFunctionCall:
+            new_scope = Memory(name=f"while_function_scope_line_{ctx.start.line}_{random.randint(0, 1000)}")
+            self.memory.add_child(new_scope)
+            self.memory = new_scope
+        else:
+            self.memory = self.memory.get_child(f"while_scope_line_{ctx.start.line}")
         condition = self.visit(ctx.expr())
         if not isinstance(condition, bool):
             throw_wrong_type_exception(ctx.start.line, ctx.start.column, "boolean")
@@ -423,9 +429,16 @@ class PseudoInterpreter(PseudoVisitor):
         self.memory = self.memory.parent
 
     def visitForStatement(self, ctx: PseudoParser.ForStatementContext):
-        self.memory = self.memory.get_child(f"for_scope_line_{ctx.start.line}")
-        if ctx.varDeclStatement():
-            self.visitAssignmentStatement(ctx.varDeclStatement())
+        if self.inFunctionCall:
+            new_scope = Memory(name=f"for_function_scope_line_{ctx.start.line}_{random.randint(0, 1000)}")
+            self.memory.add_child(new_scope)
+            self.memory = new_scope
+            if ctx.varDeclStatement():
+                self.visitVarDeclStatement(ctx.varDeclStatement())
+        else:
+            self.memory = self.memory.get_child(f"for_scope_line_{ctx.start.line}")
+            if ctx.varDeclStatement():
+                self.visitAssignmentStatement(ctx.varDeclStatement())
 
         condition = self.visit(ctx.expr())
         while condition:

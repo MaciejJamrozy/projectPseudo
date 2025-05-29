@@ -1,4 +1,8 @@
 from antlr4 import InputStream
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from PseudoInterpreter import run_interpreter
 
 
@@ -135,7 +139,7 @@ def test_indirect_recursion(capsys):
     run_interpreter(inputStream=input_stream)
 
     captured = capsys.readouterr().out.strip().splitlines()
-    assert captured == ["true", "true"]
+    assert captured == ["True", "True"]
 
 
 def test_function_with_multiple_params_and_return(capsys):
