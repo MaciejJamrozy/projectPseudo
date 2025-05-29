@@ -8,6 +8,7 @@ class Functions:
             "params": params,
             "body": body,
             "decl_line": decl_line if decl_line is not None else -1,
+            "num_called": 0,
         }
 
     def get_fun(self, fun_name):
@@ -15,3 +16,10 @@ class Functions:
             return self.functions[fun_name]
         else:
             raise NameError(f"Function '{fun_name}' not found")
+    def call_fun(self, fun_name):
+        if fun_name in self.functions:
+            self.functions[fun_name]["num_called"] += 1
+            return self.functions[fun_name]
+        else:
+            raise NameError(f"Function '{fun_name}' not found")
+        

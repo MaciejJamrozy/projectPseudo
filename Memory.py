@@ -1,7 +1,6 @@
 class Memory:
     def __init__(self, name="global"):
         self.variables = {}
-        self.functions = {}
         self.name = name
         self.children = []
         self.parent = None

@@ -260,7 +260,7 @@ class PseudoInterpreter(PseudoVisitor):
         decl_line = ctx.start.line
 
         if self.inFunctionCall:
-            if self.memory.check_var(var_id):
+            if var_id in self.memory.variables.keys():
                 decl_line = self.memory.variables[var_id]["decl_line"]
                 throw_var_redeclaration_exception(ctx.start.line, ctx.start.column, var_id, decl_line)
             else:
@@ -441,9 +441,21 @@ class PseudoInterpreter(PseudoVisitor):
 
     def visitFunctionCallStatement(self, ctx: PseudoParser.FunctionCallStatementContext):
         self.inFunctionCall = True
-        self.memory = self.memory.get_child(f"function_scope_line_{ctx.start.line}") 
+        fun_name = ctx.ID().getText()
 
-        name = ctx.ID().getText()
+        if not self.functions.get_fun(fun_name):
+            throw_non_defined_function_exception(
+                ctx.start.line, ctx.start.column, fun_name
+            )
+        self.functions.call_fun(fun_name)
+
+        func = self.functions.get_fun(fun_name)
+
+        new_scope = Memory(name=f"function_scope_line_{fun_name}_call_{func["num_called"]}")
+        self.memory.add_child(new_scope)
+        self.memory = new_scope
+
+        name = fun_name
         if name not in self.functions.functions.keys():
             throw_non_defined_function_exception(
                 ctx.start.line, ctx.start.column, ctx.name.text
