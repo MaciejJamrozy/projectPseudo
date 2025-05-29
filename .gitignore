@@ -11,3 +11,4 @@ PseudoListener.py
 PseudoVisitor.py
 command.txt
 *.pseudo
+.DS_Store

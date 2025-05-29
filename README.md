@@ -2,7 +2,7 @@
 
 ## Wprowadzenie
 
-Pseudo to niestandardowy język programowania stworzony z myślą o prostocie składni oraz solidnych podstawach, odpowiednich zarówno do celów edukacyjnych, jak i małych projektów. Język wspiera podstawowe konstrukcje programistyczne, takie jak deklaracje zmiennych, struktury sterujące (`if`, `while`, `for`) oraz definicje funkcji, kładąc szczególny nacisk na bezpieczeństwo typów i obsługę błędów.
+Pseudo++ to niestandardowy język programowania stworzony z myślą o prostocie składni oraz solidnych podstawach, odpowiednich zarówno do celów edukacyjnych, jak i małych projektów. Język wspiera podstawowe konstrukcje programistyczne, takie jak deklaracje zmiennych, struktury sterujące (`if`, `while`, `for`) oraz definicje funkcji, kładąc szczególny nacisk na bezpieczeństwo typów i obsługę błędów.
 
 Dokumentacja ta ma na celu zapewnienie pełnego przeglądu języka Pseudo, obejmującego jego cechy, składnię, semantykę, kluczowe komponenty, sposób użycia, obsługę błędów oraz praktyczne przykłady.
 

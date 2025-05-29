@@ -422,8 +422,6 @@ class PseudoInterpreter(PseudoVisitor):
             condition = self.visit(ctx.expr())
         self.memory = self.memory.parent
 
-
-
     def visitForStatement(self, ctx: PseudoParser.ForStatementContext):
         self.memory = self.memory.get_child(f"for_scope_line_{ctx.start.line}")
         if ctx.varDeclStatement():
@@ -446,7 +444,6 @@ class PseudoInterpreter(PseudoVisitor):
         self.memory = self.memory.get_child(f"function_scope_line_{ctx.start.line}") 
 
         name = ctx.ID().getText()
-        func = self.functions.get_fun(name)
         if name not in self.functions.functions.keys():
             throw_non_defined_function_exception(
                 ctx.start.line, ctx.start.column, ctx.name.text
@@ -470,10 +467,10 @@ class ReturnException(Exception):
         self.value = value
 
 
-def run_interpreter(fileStream=None):
+def run_interpreter(inputStream=None):
     try:
         inputStream = (
-            fileStream if fileStream else FileStream("program.pseudo", encoding="utf-8")
+            inputStream if inputStream else FileStream("program.pseudo", encoding="utf-8")
         )
         lexer = PseudoLexer(inputStream)
         stream = CommonTokenStream(lexer)
