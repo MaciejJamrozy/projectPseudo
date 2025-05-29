@@ -509,7 +509,7 @@ def run_interpreter(inputStream=None):
 run_interpreter()
 
 # TODO
-# Zarządzanie pamięcią, stos (obsługa przepełnienia go), scopy - Maciek
+# Zarządzanie pamięcią, stos - Maciek
 # Zrobienie testów - Maciek
 # Zrobić porządek w gramatyce - Maciek
 # Zaawansowana diagnostyka błędów
@@ -518,6 +518,7 @@ run_interpreter()
 
 # dodatkowe TODO, fajne rzeczy nietrudne do zrobienia:
 # dopracowanie języka: obsługa skróconych operatorów '+=', '-+' '*=' ...
+# dodanie moliwości pisania pętli while bez nawiasów okrągłych "while 1==1: ..."
 # Importy (zeby dało się zrobić: "import anotherProgram.pseudo"
 # Biblioteka standardowa języka, z podstawowymi funkcjami typu: sqrt, time
 # REPL (Read-Eval-Print Loop) - bardzo ciekawa rzecz ale nie wiem jak trudna - Interaktywny tryb działania interpretera – użytkownik wpisuje linijki kodu i otrzymuje natychmiastowy wynik.
