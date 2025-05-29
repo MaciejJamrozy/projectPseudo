@@ -66,14 +66,11 @@ class PseudoInterpreter(PseudoVisitor):
                 throw_no_parent_scope_exception(ctx.start.line, ctx.start.column)
 
         elif ctx.op and ctx.op.type == PseudoParser.TYPE:
-            print("Type conversion requested")
             parse_type = ctx.TYPE().getText()
             if ctx.expr(0):
                 value = self.visit(ctx.expr(0))
-                print(f"Converting {value} to {parse_type}")
                 try:
                     if parse_type == "int":
-                        print(f"Converting {type(value)} to int")
                         return int(value)
                     elif parse_type == "float":
                         return float(value)
@@ -85,11 +82,6 @@ class PseudoInterpreter(PseudoVisitor):
                     throw_conversion_exception(
                         ctx.start.line, ctx.start.column, parse_type, type(value).__name__
                     )
-                    
-
-                
-
-
 
         elif ctx.op and ctx.op.type == PseudoParser.PLUS:
             left_value = self.visit(ctx.expr(0))
@@ -285,7 +277,6 @@ class PseudoInterpreter(PseudoVisitor):
         var_id = ctx.ID().getText()
         var_type = ctx.TYPE().getText()
         decl_line = ctx.start.line
-
         if self.inFunctionCall:
             if var_id in self.memory.variables.keys():
                 decl_line = self.memory.variables[var_id]["decl_line"]
@@ -293,19 +284,19 @@ class PseudoInterpreter(PseudoVisitor):
             else:
                 self.memory.set_var(var_id, None, decl_line, var_type)
         if ctx.op:
-            value = str(self.visit(ctx.expr()))
+            value = self.visit(ctx.expr())
             try:
                 if var_type == "string":
-                    if not re.fullmatch(r'(?:\\.|(?!(["\'])).)*', value):
+                    if not re.fullmatch(r'(?:\\.|(?!(["\'])).)*', str(value)):
                         raise ValueError
 
                 elif var_type == "int":
-                    if not re.fullmatch(r"-?\d+", value):
+                    if not re.fullmatch(r"-?\d+\.?\d*", str(value)):
                         raise ValueError
                     value = int(value)
 
                 elif var_type == "float":
-                    if not re.fullmatch(r"-?\d+\.\d+", value):
+                    if not re.fullmatch(r"-?\d+\.?\d*", str(value)):
                         raise ValueError
                     value = float(value)
 
@@ -320,8 +311,8 @@ class PseudoInterpreter(PseudoVisitor):
                     )
             except Exception as e:
                 throw_wrong_type_exception(ctx.start.line, ctx.start.column, var_type)
-        if self.memory.check_var(var_id):
-            self.memory.set_value(var_id, value)
+            if self.memory.check_var(var_id):
+                self.memory.set_value(var_id, value)
 
     def visitAssignmentStatement(self, ctx):
         var_id = ctx.ID().getText()
@@ -347,22 +338,21 @@ class PseudoInterpreter(PseudoVisitor):
                     ctx.start.line, ctx.start.column, ctx.op.text
                 )
         else:
-            value = str(self.visit(ctx.expr()))
+            value = self.visit(ctx.expr())
             if self.memory.check_var(var_id) is False:
                 throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id)
 
             try:
                 if var_type == "string":
-                    if not re.fullmatch(r'(?:\\.|(?!(["\'])).)*', value):
+                    if not re.fullmatch(r'(?:\\.|(?!(["\'])).)*', str(value)):
                         raise ValueError
-
                 elif var_type == "int":
-                    if not re.fullmatch(r"-?\d+", value):
+                    if not bool(re.fullmatch(r"-?\d+\.?\d*", str(value))):
                         raise ValueError
                     value = int(value)
 
                 elif var_type == "float":
-                    if not re.fullmatch(r"-?\d+\.\d+", value):
+                    if not re.fullmatch(r"-?\d+\.?\d*", str(value)):
                         raise ValueError
                     value = float(value)
 
