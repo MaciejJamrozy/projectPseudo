@@ -288,3 +288,21 @@ def test_advanced_function_logic(capsys):
 
     captured = capsys.readouterr().out.strip().splitlines()
     assert captured == ["120", "5"]
+
+def test_stack_overflow(capsys):
+    code = """
+    function factorial(int n) -> int:
+        if n == 0:
+            return 1;
+        else:
+            return n * factorial(n - 1);
+        end if;
+    end function;
+
+    factorial(25);
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+
+    captured = capsys.readouterr().out
+    assert "level" in captured.lower()

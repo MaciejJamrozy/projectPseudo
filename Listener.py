@@ -6,10 +6,7 @@ from Functions import Functions
 from PseudoExceptions import (
     throw_var_redeclaration_exception,
     throw_non_redeclaration_in_function_def,
-    throw_non_defined_function_exception,
 )
-import re
-
 
 class Listener(PseudoListener):
     def __init__(self, memory: Memory, visitor: PseudoVisitor, functions: Functions):
@@ -41,17 +38,15 @@ class Listener(PseudoListener):
     def exitFunctionDef(self, ctx):
         self.inFunctionDef = False
 
-
     def enterFunctionCallStatement(self, ctx):
         new_scope = Memory(name=f"function_listener_scope_line_{ctx.start.line}")
         self.memory.add_child(new_scope)
-        self.memory = new_scope  
-
+        self.memory = new_scope
 
     def exitFunctionCallStatement(self, ctx):
         self.memory = self.memory.parent
 
-    def enterVarDeclStatement(self, ctx:PseudoParser.VarDeclStatementContext):
+    def enterVarDeclStatement(self, ctx: PseudoParser.VarDeclStatementContext):
         if self.inFunctionDef:
             return
         else:
@@ -77,7 +72,7 @@ class Listener(PseudoListener):
         self.memory = new_scope
 
     def exitWhileStatement(self, ctx):
-        self.memory = self.memory.parent  
+        self.memory = self.memory.parent
 
     def exitForStatement(self, ctx: PseudoParser.ForStatementContext):
         self.memory = self.memory.parent
