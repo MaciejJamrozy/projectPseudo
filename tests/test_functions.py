@@ -1,9 +1,9 @@
+from PseudoInterpreter import run_interpreter
 from antlr4 import InputStream
 import os
 import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from PseudoInterpreter import run_interpreter
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
 def test_duplicate_function_args(capsys):
@@ -17,9 +17,6 @@ def test_duplicate_function_args(capsys):
 
     captured = capsys.readouterr().out
     assert "error in line" in captured.lower()
-
-
-from antlr4 import InputStream
 
 
 def test_duplicate_param_names_different_types(capsys):
@@ -289,6 +286,7 @@ def test_advanced_function_logic(capsys):
     captured = capsys.readouterr().out.strip().splitlines()
     assert captured == ["120", "5"]
 
+
 def test_stack_overflow(capsys):
     code = """
     function factorial(int n) -> int:
@@ -307,6 +305,7 @@ def test_stack_overflow(capsys):
     captured = capsys.readouterr().out
     assert "level" in captured.lower()
 
+
 def test_scope_range_correctness(capsys):
     code = """
     int a = 1;
@@ -323,3 +322,20 @@ def test_scope_range_correctness(capsys):
 
     captured = capsys.readouterr().out.lower()
     assert "error" in captured
+
+def test_func_def_inside_another_func(capsys):
+    code = """
+    function int foo(int x):
+        function int inner_foo(int y):
+            return y++;
+        end;
+
+        return inner_foo(x);
+    end;
+
+    print(foo(0));
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+
+    assert capsys.readouterr().out.strip() == "1"
