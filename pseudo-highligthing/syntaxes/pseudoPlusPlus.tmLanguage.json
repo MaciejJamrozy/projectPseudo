@@ -5,7 +5,7 @@
 	"patterns": [
 		{
 		"name": "comment.line.double-slash.pseudo",
-		"match": "(//|#).*$"
+		"match": "(//).*$"
 		},
 		{
 			"name": "keyword.control.pseudo",

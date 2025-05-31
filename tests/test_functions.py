@@ -306,3 +306,20 @@ def test_stack_overflow(capsys):
 
     captured = capsys.readouterr().out
     assert "level" in captured.lower()
+
+def test_scope_range_correctness(capsys):
+    code = """
+    int a = 1;
+
+    def int foo(int x):
+        x = parent::a;
+        return x;
+    end;
+
+    print(foo(0));
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+
+    captured = capsys.readouterr().out.lower()
+    assert "error" in captured
