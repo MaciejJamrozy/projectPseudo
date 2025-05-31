@@ -50,7 +50,7 @@ class PseudoInterpreter(PseudoVisitor):
 
         elif ctx.BOOL():
             value = ctx.BOOL().getText()
-            return value == "true"
+            return value == "True"
 
         elif ctx.NUMBER() or ctx.DOUBLE():
             return self.get_nummeric_value(ctx.getText())
@@ -301,9 +301,9 @@ class PseudoInterpreter(PseudoVisitor):
                     value = float(value)
 
                 elif var_type == "boolean":
-                    if not str(value).lower() in ["true", "false"]:
+                    if not str(value) in ["True", "False"]:
                         raise ValueError
-                    value = str(value).lower() == "true"
+                    value = str(value) == "True"
 
                 else:
                     throw_wrong_type_exception(
@@ -357,9 +357,9 @@ class PseudoInterpreter(PseudoVisitor):
                     value = float(value)
 
                 elif var_type == "boolean":
-                    if not value.lower() in ["true", "false"]:
+                    if not str(value) in ["True", "False"]:
                         raise ValueError
-                    value = value.lower() == "true"
+                    value = str(value) == "True"
 
                 else:
                     throw_wrong_type_exception(

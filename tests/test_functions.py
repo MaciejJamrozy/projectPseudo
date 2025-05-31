@@ -118,7 +118,7 @@ def test_indirect_recursion(capsys):
     code = """
     function is_even(int n) -> boolean:
         if n == 0:
-            return true;
+            return True;
         else:
             return is_odd(n - 1);
         end if;
@@ -126,7 +126,7 @@ def test_indirect_recursion(capsys):
 
     function is_odd(int n) -> boolean:
         if n == 0:
-            return false;
+            return False;
         else:
             return is_even(n - 1);
         end if;
@@ -176,9 +176,9 @@ def test_function_with_boolean_logic(capsys):
     code = """
     function boolean greater_than_five(int x):
         if x > 5:
-            return true;
+            return True;
         else:
-            return false;
+            return False;
         end if;
     end function;
 

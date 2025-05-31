@@ -144,7 +144,7 @@ def test_float_to_string_conversion(capsys):
 def test_boolean_to_string_conversion(capsys):
     code = """
     string x;
-    x = (string)true;
+    x = (string)True;
     print(x);
     """
     input_stream = InputStream(code)
@@ -170,8 +170,8 @@ def test_arithmetic_operators(capsys):
 
 def test_logical_operators(capsys):
     code = """
-    boolean x = true;
-    boolean y = false;
+    boolean x = True;
+    boolean y = False;
     print(x and y);
     print(x or y);
     print(not x);

@@ -88,7 +88,7 @@ fragment ESC: '\\' ["'\\rbnt];
 
 NUMBER: [0-9]+;
 DOUBLE: [0-9]+ '.' [0-9]+;
-BOOL: 'true' | 'false';
+BOOL: 'True' | 'False';
 
 WS: [ \t\n\r]+ -> skip;
 
