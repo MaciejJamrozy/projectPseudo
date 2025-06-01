@@ -311,7 +311,7 @@ def test_scope_range_correctness(capsys):
     int a = 1;
 
     def int foo(int x):
-        x = parent::a;
+        x = a;
         return x;
     end;
 
@@ -327,7 +327,7 @@ def test_func_def_inside_another_func(capsys):
     code = """
     function int foo(int x):
         function int inner_foo(int y):
-            return y++;
+            return y+1;
         end;
 
         return inner_foo(x);

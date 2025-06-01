@@ -47,7 +47,8 @@ class Memory:
     def get_var(self, var_name):
         if var_name in self.variables:
             return self.variables[var_name]
-        elif self.parent:
+        elif self.parent and  not self.name.startswith("function_scope"):
             return self.parent.get_var(var_name)
         else:
             raise NameError(f"Variable '{var_name}' not found")
+        

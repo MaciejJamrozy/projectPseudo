@@ -145,6 +145,7 @@ def test_loop_with_continue(capsys):
     for (int i = 0; i < 5; i++):
         if (i == 2):
             continue;
+        end if;
         print(i);
     end loop;
     """
@@ -152,7 +153,7 @@ def test_loop_with_continue(capsys):
     run_interpreter(inputStream=input_stream)
 
     captured = capsys.readouterr().out.strip().splitlines()
-    expected = ["1", "3"]
+    expected = ["0","1", "3","4"]
     assert captured == expected
 
 
@@ -161,6 +162,7 @@ def test_loop_with_break(capsys):
     for (int i = 0; i < 5; i++):
         if (i == 3):
             break;
+        end if;
         print(i);
     end loop;
     """

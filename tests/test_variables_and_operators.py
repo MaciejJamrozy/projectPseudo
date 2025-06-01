@@ -193,13 +193,18 @@ def test_comparison_operators(capsys):
     print(a > b);
     print(a <= b);
     print(a >= b);
+    int c = 5;
+    print(a == c);
+    print(a <= c);
+    print(a >= c);
+    print(a < c);
+    print(a > c);
     """
     input_stream = InputStream(code)
     run_interpreter(inputStream=input_stream)
 
     captured = capsys.readouterr().out.strip().splitlines()
-    assert captured == ["False", "True", "True", "False", "True", "False"]
-
+    assert captured == ["False", "True", "True", "False", "True", "False","True", "True", "True", "False", "False"]
 
 def test_negative_integer_assignment(capsys):
     code = """

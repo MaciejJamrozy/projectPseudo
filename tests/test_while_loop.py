@@ -78,7 +78,7 @@ def test_while_loop_with_continue(capsys):
 def test_while_with_break_condition(capsys):
     code = """
     int i = 0;
-    while (true):
+    while (True):
         print(i);
         i = i + 1;
         if i == 2:

@@ -10,9 +10,16 @@ statement:
 	| forStatement
 	| functionCallStatement
 	| returnStatement
+	| functionDef
+	| breakStatement
+	| continueStatement
 	| varDeclStatement;
 
 printStatement: ('print' | 'shout') '(' expr ')';
+
+breakStatement: 'break' ('loop')? | 'exit' ('loop')?;
+
+continueStatement: 'continue' ('loop')? | 'next' ('loop')?;
 
 assignmentStatement:
 	ID op = ('=' | 'is' | '<<' | '<-') expr
@@ -68,7 +75,14 @@ expr: ('input' | 'scan' | 'listen') '(' (STRING)? ')'
 	| functionCallStatement
 	| expr op = (MULT | DIV) expr
 	| expr op = (PLUS | MINUS) expr
-	| expr op = (GREATER | SMALLER | EQUAL | DIFFERENT) expr
+	| expr op = (
+		GREATER
+		| SMALLER
+		| EQUAL
+		| DIFFERENT
+		| GREATEREQUAL
+		| SMALLEREQUAL
+	) expr
 	| expr op = INTDIV expr
 	| op = MINUS expr
 	| expr op = AND expr
@@ -104,6 +118,8 @@ INCREMENT: '++';
 DECREMENT: '--';
 GREATER: '>' | 'greater than';
 SMALLER: '<' | 'smaller than';
+GREATEREQUAL: '>=' | 'greater or equal than';
+SMALLEREQUAL: '<=' | 'smaller or equal than';
 EQUAL: '==' | 'equals';
 DIFFERENT: '!=' | 'differs';
 AND: '&&' | 'and';

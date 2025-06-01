@@ -39,7 +39,7 @@ class Listener(PseudoListener):
         self.inFunctionDef = False
 
     def enterFunctionCallStatement(self, ctx):
-        new_scope = Memory(name=f"function_listener_scope_line_{ctx.start.line}")
+        new_scope = Memory(name=f"listener_function_scope_line_{ctx.start.line}")
         self.memory.add_child(new_scope)
         self.memory = new_scope
 

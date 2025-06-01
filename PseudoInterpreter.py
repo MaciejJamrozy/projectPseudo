@@ -42,7 +42,10 @@ class PseudoInterpreter(PseudoVisitor):
             if self.memory.check_var(var_id) is False:
                 throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id)
             else:
-                return self.memory.get_var(var_id)["value"]
+                try:
+                    return self.memory.get_var(var_id)["value"]
+                except NameError:
+                    throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id)
 
         elif ctx.STRING():
             value = ctx.STRING().getText()[1:-1]
@@ -56,12 +59,16 @@ class PseudoInterpreter(PseudoVisitor):
             return self.get_nummeric_value(ctx.getText())
         
         elif ctx.op and ctx.op.type == PseudoParser.PARENT:
-            if self.memory.parent:
+            if self.memory.parent and not self.memory.name.startswith("function_scope_"):
                 current_mem = self.memory
                 self.memory = self.memory.parent
                 val = self.visit(ctx.expr(0))
                 self.memory = current_mem
                 return val
+            elif self.memory.parent:
+                throw_undefined_name_exception(
+                    ctx.start.line, ctx.start.column, ctx.expr(0).getText()
+                )
             else:
                 throw_no_parent_scope_exception(ctx.start.line, ctx.start.column)
 
@@ -228,6 +235,24 @@ class PseudoInterpreter(PseudoVisitor):
                     type(left_value).__name__,
                     type(right_value).__name__,
                 )
+        elif ctx.op and ctx.op.type == PseudoParser.GREATEREQUAL:
+            left_value = self.visit(ctx.expr(0))
+            right_value = self.visit(ctx.expr(1))
+            if isinstance(left_value, (int, float)) and isinstance(
+                right_value, (int, float)
+            ):
+                return left_value >= right_value
+            elif isinstance(left_value, str) and isinstance(right_value, str):
+                return left_value >= right_value
+            else:
+                throw_unsupported_operator_exception(
+                    ctx.start.line,
+                    ctx.start.column,
+                    ctx.op.text,
+                    type(left_value).__name__,
+                    type(right_value).__name__,
+                )
+
 
         elif ctx.op and ctx.op.type == PseudoParser.SMALLER:
             left_value = self.visit(ctx.expr(0))
@@ -238,6 +263,23 @@ class PseudoInterpreter(PseudoVisitor):
                 return left_value < right_value
             elif isinstance(left_value, str) and isinstance(right_value, str):
                 return left_value < right_value
+            else:
+                throw_unsupported_operator_exception(
+                    ctx.start.line,
+                    ctx.start.column,
+                    ctx.op.text,
+                    type(left_value).__name__,
+                    type(right_value).__name__,
+                )
+        elif ctx.op and ctx.op.type == PseudoParser.SMALLEREQUAL:
+            left_value = self.visit(ctx.expr(0))
+            right_value = self.visit(ctx.expr(1))
+            if isinstance(left_value, (int, float)) and isinstance(
+                right_value, (int, float)
+            ):
+                return left_value <= right_value
+            elif isinstance(left_value, str) and isinstance(right_value, str):
+                return left_value <= right_value
             else:
                 throw_unsupported_operator_exception(
                     ctx.start.line,
@@ -316,60 +358,70 @@ class PseudoInterpreter(PseudoVisitor):
 
     def visitAssignmentStatement(self, ctx):
         var_id = ctx.ID().getText()
-        var_type = self.memory.get_var(var_id)["type"]
-        if ctx.op and ctx.op.type == PseudoParser.INCREMENT:
-            val = self.memory.get_var(var_id)["value"]
-            if isinstance(val, int):
-                self.memory.set_value(var_id, val + 1)
-            elif isinstance(val, float):
-                self.memory.set_value(var_id, val + 1.0)
-            else:
-                throw_wrong_type_exception(
-                    ctx.start.line, ctx.start.column, type(val).__name__
-                )
-        elif ctx.op and ctx.op.type == PseudoParser.DECREMENT:
-            val = self.memory.get_var(var_id)["value"]
-            if isinstance(val, int):
-                self.memory.set_value(var_id, val - 1)
-            elif isinstance(val, float):
-                self.memory.set_value(var_id, val - 1.0)
-            else:
-                throw_unknown_operator_exception(
-                    ctx.start.line, ctx.start.column, ctx.op.text
-                )
-        else:
-            value = self.visit(ctx.expr())
-            if self.memory.check_var(var_id) is False:
-                throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id)
-
-            try:
-                if var_type == "string":
-                    if not re.fullmatch(r'(?:\\.|(?!(["\'])).)*', str(value)):
-                        raise ValueError
-                elif var_type == "int":
-                    if not bool(re.fullmatch(r"-?\d+\.?\d*", str(value))):
-                        raise ValueError
-                    value = int(value)
-
-                elif var_type == "float":
-                    if not re.fullmatch(r"-?\d+\.?\d*", str(value)):
-                        raise ValueError
-                    value = float(value)
-
-                elif var_type == "boolean":
-                    if not str(value) in ["True", "False"]:
-                        raise ValueError
-                    value = str(value) == "True"
-
+        try:
+            var = self.memory.get_var(var_id)
+            var_type = var["type"] if var else "unknown"
+            if ctx.op and ctx.op.type == PseudoParser.INCREMENT:
+                val = var["value"]
+                if isinstance(val, int):
+                    self.memory.set_value(var_id, val + 1)
+                elif isinstance(val, float):
+                    self.memory.set_value(var_id, val + 1.0)
                 else:
                     throw_wrong_type_exception(
-                        ctx.start.line, ctx.start.column, var_type
+                        ctx.start.line, ctx.start.column, type(val).__name__
                     )
+            elif ctx.op and ctx.op.type == PseudoParser.DECREMENT:
+                val = var["value"]
+                if isinstance(val, int):
+                    self.memory.set_value(var_id, val - 1)
+                elif isinstance(val, float):
+                    self.memory.set_value(var_id, val - 1.0)
+                else:
+                    throw_unknown_operator_exception(
+                        ctx.start.line, ctx.start.column, ctx.op.text
+                    )
+            else:
+                value = self.visit(ctx.expr())
+                if self.memory.check_var(var_id) is False:
+                    throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id)
 
-            except Exception:
-                throw_wrong_type_exception(ctx.start.line, ctx.start.column, var_type)
+                try:
+                    if var_type == "string":
+                        if not re.fullmatch(r'(?:\\.|(?!(["\'])).)*', str(value)):
+                            raise ValueError
+                    elif var_type == "int":
+                        if not bool(re.fullmatch(r"-?\d+\.?\d*", str(value))):
+                            raise ValueError
+                        value = int(value)
 
-            self.memory.set_value(var_id, value)
+                    elif var_type == "float":
+                        if not re.fullmatch(r"-?\d+\.?\d*", str(value)):
+                            raise ValueError
+                        value = float(value)
+
+                    elif var_type == "boolean":
+                        if not str(value) in ["True", "False"]:
+                            raise ValueError
+                        value = str(value) == "True"
+
+                    else:
+                        throw_wrong_type_exception(
+                            ctx.start.line, ctx.start.column, var_type
+                        )
+
+                except Exception:
+                    throw_wrong_type_exception(ctx.start.line, ctx.start.column, var_type)
+
+                self.memory.set_value(var_id, value)
+        except NameError:
+            throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id)
+
+    def visitBreakStatement(self, ctx):
+        raise BreakException("Break statement encountered, exiting loop.")
+    def visitContinueStatement(self, ctx):
+        raise ContinueException("Continue statement encountered, skipping to next iteration of loop.")  
+        
 
     def call_function(self, name, args, ctx):
         func = self.functions.functions[name]
@@ -400,7 +452,6 @@ class PseudoInterpreter(PseudoVisitor):
                 )
             else:
                 self.memory.set_var(var_name, arg, decl_line, var_type)
-
         for stmt in func["body"].statement():
             self.visit(stmt)
 
@@ -439,8 +490,13 @@ class PseudoInterpreter(PseudoVisitor):
         if not isinstance(condition, bool):
             throw_wrong_type_exception(ctx.start.line, ctx.start.column, "boolean")
         while condition:
-            for stmt in ctx.body().statement():
-                self.visit(stmt)
+            try:
+                for stmt in ctx.body().statement():
+                    self.visit(stmt)
+            except BreakException:
+                break
+            except ContinueException:
+                condition = self.visit(ctx.expr())
             condition = self.visit(ctx.expr())
         self.memory = self.memory.parent
 
@@ -461,8 +517,14 @@ class PseudoInterpreter(PseudoVisitor):
             if not isinstance(condition, bool):
                 throw_wrong_type_exception(ctx.start.line, ctx.start.column, "boolean")
             if ctx.body():
-                for statement in ctx.body().statement():
-                    self.visit(statement)
+                try:
+                    for statement in ctx.body().statement():
+                        try:
+                            self.visit(statement)
+                        except ContinueException:
+                            break
+                except BreakException:
+                   break 
             if ctx.assignmentStatement():
                 self.visit(ctx.assignmentStatement())
             condition = self.visit(ctx.expr())
@@ -471,7 +533,6 @@ class PseudoInterpreter(PseudoVisitor):
     def visitFunctionCallStatement(self, ctx: PseudoParser.FunctionCallStatementContext):
         self.inFunctionCall = True
         fun_name = ctx.ID().getText()
-
         if not self.functions.get_fun(fun_name):
             throw_non_defined_function_exception(
                 ctx.start.line, ctx.start.column, fun_name
@@ -480,19 +541,20 @@ class PseudoInterpreter(PseudoVisitor):
 
         func = self.functions.get_fun(fun_name)
 
+        args = []
+        if ctx.argumentList():
+            for expr_ctx in ctx.argumentList().expr():
+                args.append(self.visit(expr_ctx))
+
         new_scope = Memory(name=f"function_scope_line_{fun_name}_call_{func["num_called"]}")
         self.memory.add_child(new_scope)
         self.memory = new_scope
-
         name = fun_name
         if name not in self.functions.functions.keys():
             throw_non_defined_function_exception(
                 ctx.start.line, ctx.start.column, ctx.name.text
             )
-        args = []
-        if ctx.argumentList():
-            for expr_ctx in ctx.argumentList().expr():
-                args.append(self.visit(expr_ctx))
+
         try:
             self.call_function(name, args, ctx)
             self.memory = self.memory.parent
@@ -504,6 +566,16 @@ class PseudoInterpreter(PseudoVisitor):
 
 
 class ReturnException(Exception):
+    def __init__(self, value):
+        self.value = value
+
+
+class ContinueException(Exception):
+    def __init__(self, value):
+        self.value = value
+
+
+class BreakException(Exception):
     def __init__(self, value):
         self.value = value
 
