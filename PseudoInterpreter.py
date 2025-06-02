@@ -391,32 +391,33 @@ class PseudoInterpreter(PseudoVisitor):
             if currentVariablesStoringObject.check_var(var_id) is False:
                 throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id)
 
-                try:
-                    if var_type == "string":
-                        if not re.fullmatch(r'(?:\\.|(?!(["\'])).)*', str(value)):
-                            raise ValueError
-                    elif var_type == "int":
-                        if not bool(re.fullmatch(r"-?\d+\.?\d*", str(value))):
-                            raise ValueError
-                        value = int(value)
+            try:
+                if var_type == "string":
+                    if not re.fullmatch(r'(?:\\.|(?!(["\'])).)*', str(value)):
+                        raise ValueError
+                        
+                elif var_type == "int":
+                    if not bool(re.fullmatch(r"-?\d+\.?\d*", str(value))):
+                        raise ValueError
+                    value = int(value)
 
-                    elif var_type == "float":
-                        if not re.fullmatch(r"-?\d+\.?\d*", str(value)):
-                            raise ValueError
-                        value = float(value)
+                elif var_type == "float":
+                    if not re.fullmatch(r"-?\d+\.?\d*", str(value)):
+                        raise ValueError
+                    value = float(value)
 
-                    elif var_type == "boolean":
-                        if not str(value) in ["True", "False"]:
-                            raise ValueError
-                        value = str(value) == "True"
+                elif var_type == "boolean":
+                    if not str(value) in ["True", "False"]:
+                        raise ValueError
+                    value = str(value) == "True"
 
-                    else:
-                        throw_wrong_type_exception(
-                            ctx.start.line, ctx.start.column, var_type
-                        )
+                else:
+                    throw_wrong_type_exception(
+                        ctx.start.line, ctx.start.column, var_type
+                    )
 
-                except Exception:
-                    throw_wrong_type_exception(ctx.start.line, ctx.start.column, var_type)
+            except Exception:
+                throw_wrong_type_exception(ctx.start.line, ctx.start.column, var_type)
 
             currentVariablesStoringObject.set_value(var_id, value)
 

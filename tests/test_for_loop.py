@@ -142,7 +142,7 @@ def test_modify_loop_variable_inside_loop(capsys):
 
 def test_loop_with_continue(capsys):
     code = """
-    for (int i = 1; i < 4; i++):
+    for (int i = 0; i < 5; i++):
         if (i == 2):
             continue;
         end if;
