@@ -142,7 +142,7 @@ def test_modify_loop_variable_inside_loop(capsys):
 
 def test_loop_with_continue(capsys):
     code = """
-    for (int i = 0; i < 5; i++):
+    for (int i = 1; i < 4; i++):
         if (i == 2):
             continue;
         end if;
@@ -191,3 +191,52 @@ def test_loop_with_nested_break(capsys):
     captured = capsys.readouterr().out.strip().splitlines()
     expected = ["0", "0", "1", "0", "2", "0"]
     assert captured == expected
+
+def test_loop_with_nested_break(capsys):
+    code = """
+    int a = 0;
+    for (;;):
+        print(a);
+        a = a + 1;
+        if a == 3:
+            break;
+        end if;
+    end loop;
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+
+    captured = capsys.readouterr().out.strip().splitlines()
+    expected = ["0", "1", "2"]
+    assert captured == expected
+
+
+def test_declaration_inside_while_loop(capsys):
+    code = """
+   for (int i = 0; i < 1; i++):
+        int y = 11;
+        for (int j = 0; j < 2; j++):
+        end loop;
+    end loop;
+
+    print(y);
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+    assert capsys.readouterr().out.strip() == "11"
+
+
+def test_redeclaration_inside_while_loop(capsys):
+    code = """
+    for (int i = 0; i < 2; i++):
+        int y = 11;
+        for (int j = 0; j < 2; j++):
+        end loop;
+    end loop;
+    
+    print(y);
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+    captured = capsys.readouterr().out.strip().lower()
+    assert "error" in captured

@@ -1,19 +1,21 @@
 from PseudoListener import PseudoListener
-from PseudoParser import PseudoParser
 from PseudoVisitor import PseudoVisitor
-from Memory import Memory
+from PseudoParser import PseudoParser
+from StackFrame import StackFrame
 from Functions import Functions
+import re
 from PseudoExceptions import (
-    throw_var_redeclaration_exception,
+    throw_non_redeclaration_in_function_def,
     throw_non_redeclaration_in_function_def,
 )
 
+
 class Listener(PseudoListener):
-    def __init__(self, memory: Memory, visitor: PseudoVisitor, functions: Functions):
-        self.memory = memory
+    def __init__(self, stackFrame: StackFrame, visitor: PseudoVisitor, functions: Functions=None):
+        self.currentFrame = stackFrame
         self.visitor = visitor
-        self.functions = functions
         self.inFunctionDef = False
+        self.functions = functions
 
     def enterFunctionDef(self, ctx):
         self.inFunctionDef = True
@@ -33,46 +35,9 @@ class Listener(PseudoListener):
                 else:
                     params[param_name] = param_type
 
-        self.functions.set_fun(name, return_type, params, body, ctx.start.line)
+        self.functions.set_fun(
+            name, return_type, params, body, ctx.start.line
+        )
 
     def exitFunctionDef(self, ctx):
         self.inFunctionDef = False
-
-    def enterFunctionCallStatement(self, ctx):
-        new_scope = Memory(name=f"listener_function_scope_line_{ctx.start.line}")
-        self.memory.add_child(new_scope)
-        self.memory = new_scope
-
-    def exitFunctionCallStatement(self, ctx):
-        self.memory = self.memory.parent
-
-    def enterVarDeclStatement(self, ctx: PseudoParser.VarDeclStatementContext):
-        if self.inFunctionDef:
-            return
-        else:
-            var_id = ctx.ID().getText()
-            var_type = ctx.TYPE().getText()
-            decl_line = ctx.start.line
-            if var_id in self.memory.variables.keys():
-                decl_line = self.memory.variables[var_id]["decl_line"]
-                throw_var_redeclaration_exception(
-                    ctx.start.line, ctx.start.column, var_id, decl_line
-                )
-            else:
-                self.memory.set_var(var_id, None, decl_line, var_type)
-
-    def enterForStatement(self, ctx: PseudoParser.ForStatementContext):
-        new_scope = Memory(name=f"for_scope_line_{ctx.start.line}")
-        self.memory.add_child(new_scope)
-        self.memory = new_scope
-
-    def enterWhileStatement(self, ctx):
-        new_scope = Memory(name=f"while_scope_line_{ctx.start.line}")
-        self.memory.add_child(new_scope)
-        self.memory = new_scope
-
-    def exitWhileStatement(self, ctx):
-        self.memory = self.memory.parent
-
-    def exitForStatement(self, ctx: PseudoParser.ForStatementContext):
-        self.memory = self.memory.parent

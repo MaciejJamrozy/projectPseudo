@@ -50,3 +50,19 @@ def test_if_elseif_else(capsys):
 
     captured = capsys.readouterr().out.strip().splitlines()
     assert captured == ['zero']
+
+
+def test_proper_scope_inside_if_block(capsys):
+    code = """
+    int a = 4;
+
+    if a > 3:
+        int b = 0;
+    end if;
+
+    print(b);
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+    output = capsys.readouterr().out.strip().lower()
+    assert "undefined" in output.lower()

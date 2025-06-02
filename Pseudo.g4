@@ -10,20 +10,16 @@ statement:
 	| forStatement
 	| functionCallStatement
 	| returnStatement
-	| functionDef
 	| breakStatement
 	| continueStatement
 	| varDeclStatement;
 
 printStatement: ('print' | 'shout') '(' expr ')';
 
-breakStatement: 'break' ('loop')? | 'exit' ('loop')?;
-
-continueStatement: 'continue' ('loop')? | 'next' ('loop')?;
-
-assignmentStatement:
-	ID op = ('=' | 'is' | '<<' | '<-') expr
-	| ID op = ('++' | '--');
+assignmentStatement
+	: (global = 'global')? ID op = ('=' | 'is' | '<<' | '<-') expr
+	| (global = 'global')? ID op = ('++' | '--')
+	;
 
 ifStatement:
 	'if' ('(' expr ')' | expr) (':' | 'then') body (
@@ -33,9 +29,11 @@ ifStatement:
 whileStatement: 'while' '(' expr ')' ':' body 'end' ('loop')?;
 
 forStatement:
-	'for' '(' varDeclStatement? ';' expr ';' assignmentStatement? ')' ':' body 'end' (
-		'loop'
-	)?;
+	'for' '(' varDeclStatement? ';' expr? ';' assignmentStatement? ')' ':' body 'end' ('loop')?;
+
+breakStatement: 'break' ('loop')? | 'exit' ('loop')?;
+
+continueStatement: 'continue' ('loop')? | 'next' ('loop')?;
 
 functionDef:
 	'function' type = TYPE name = ID '(' params = paramList? ')' ':' block = body 'end' (
@@ -66,15 +64,23 @@ functionCallStatement: name = ID '(' args = argumentList? ')';
 
 argumentList: expr (',' expr)*;
 
-body: (statement ';')*;
+body: ((functionDef | statement) ';')*;
 
 varDeclStatement:
-	TYPE ID (op = ('=' | 'is' | '<<' | '<-') expr)?;
+	(global = 'global')? TYPE ID (op = ('=' | 'is' | '<<' | '<-') expr)?;
 
 expr: ('input' | 'scan' | 'listen') '(' (STRING)? ')'
 	| functionCallStatement
 	| expr op = (MULT | DIV) expr
 	| expr op = (PLUS | MINUS) expr
+	| expr op = (
+		GREATER
+		| SMALLER
+		| EQUAL
+		| DIFFERENT
+		| GREATEREQUAL
+		| SMALLEREQUAL
+	) expr
 	| expr op = (
 		GREATER
 		| SMALLER
@@ -118,6 +124,8 @@ INCREMENT: '++';
 DECREMENT: '--';
 GREATER: '>' | 'greater than';
 SMALLER: '<' | 'smaller than';
+GREATEREQUAL: '>=' | 'greater or equal than';
+SMALLEREQUAL: '<=' | 'smaller or equal than';
 GREATEREQUAL: '>=' | 'greater or equal than';
 SMALLEREQUAL: '<=' | 'smaller or equal than';
 EQUAL: '==' | 'equals';

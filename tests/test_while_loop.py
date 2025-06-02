@@ -1,6 +1,7 @@
 from antlr4 import InputStream
 import os
 import sys
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from PseudoInterpreter import run_interpreter
 
@@ -18,12 +19,10 @@ def test_simple_while_loop(capsys):
     assert capsys.readouterr().out.strip().splitlines() == ["0", "1", "2"]
 
 
-
-
 def test_nested_while_loops(capsys):
     code = """
     int i = 0;
-    while (i < 2):
+    while (i < 1):
         int j = 0;
         while (j < 2):
             print(i);
@@ -35,16 +34,7 @@ def test_nested_while_loops(capsys):
     """
     input_stream = InputStream(code)
     run_interpreter(inputStream=input_stream)
-    assert capsys.readouterr().out.strip().splitlines() == [
-        "0",
-        "0",
-        "0",
-        "1",
-        "1",
-        "0",
-        "1",
-        "1",
-    ]
+    assert capsys.readouterr().out.strip().splitlines() == ["0", "0", "0", "1"]
 
 
 def test_while_loop_with_float_variable(capsys):
@@ -75,6 +65,7 @@ def test_while_loop_with_continue(capsys):
     run_interpreter(inputStream=input_stream)
     assert capsys.readouterr().out.strip().splitlines() == ["1", "3"]
 
+
 def test_while_with_break_condition(capsys):
     code = """
     int i = 0;
@@ -89,3 +80,39 @@ def test_while_with_break_condition(capsys):
     input_stream = InputStream(code)
     run_interpreter(inputStream=input_stream)
     assert capsys.readouterr().out.strip().splitlines() == ["0", "1"]
+
+
+def test_declaration_inside_while_loop(capsys):
+    code = """
+    int i = 0;
+    while (i < 1):
+        int j = 11;
+        while (j < 2):
+            j = j + 1;
+        end loop;
+        i = i + 1;
+        print(j);
+    end loop;
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+    assert capsys.readouterr().out.strip() == "11"
+
+
+def test_redeclaration_inside_while_loop(capsys):
+    code = """
+    int i = 0;
+    while (i < 2):
+        int j = 0;
+        while (j < 2):
+            print(i);
+            print(j);
+            j = j + 1;
+        end loop;
+        i = i + 1;
+    end loop;
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+    captured = capsys.readouterr().out.strip().lower()
+    assert "error" in captured

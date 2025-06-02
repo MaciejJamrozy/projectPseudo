@@ -284,3 +284,50 @@ def test_negative_float_condition(capsys):
 
     captured = capsys.readouterr().out.strip().splitlines()
     assert captured == ["cold"]
+
+
+def test_proper_var_decl_order(capsys):
+    code = """
+    print(y);
+
+    int y = 11;
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+    output = capsys.readouterr().out.strip().lower()
+    assert "undefined" in output.lower()
+
+def test_global_variable_declaration_and_assignment(capsys):
+    code = """
+    global int x = 5;
+
+    print(x);
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+    assert capsys.readouterr().out.strip() == "5"
+
+def test_global_variable_declaration_and_assignment(capsys):
+    code = """
+    global int x = 5;
+
+    int x = 6;
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+    captured = capsys.readouterr().out.lower()
+    assert 'redeclaration' in captured
+
+def test_global_variable_used_inside_function(capsys):
+    code = """
+    global int x = 5;
+
+    function void foo():
+        print(x);
+    end;
+    
+    foo();
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+    assert capsys.readouterr().out.strip() == "5"

@@ -1,37 +1,89 @@
 from antlr4 import *
-from PseudoVisitor import PseudoVisitor
-from PseudoLexer import PseudoLexer
-from PseudoParser import PseudoParser
 from SyntaxErrorListener import SyntaxErrorListener
-from Listener import Listener
-from Memory import Memory
+from PseudoVisitor import PseudoVisitor
+from PseudoParser import PseudoParser
+from PseudoLexer import PseudoLexer
+from StackFrame import StackFrame
 from Functions import Functions
+from Variables import Variables
+from Listener import Listener
+from Stack import Stack
+import re
 from PseudoExceptions import (
     throw_unsupported_operator_exception,
     throw_undefined_name_exception,
     throw_wrong_type_exception,
     throw_non_defined_function_exception,
-    throw_non_redeclaration_in_function_def,throw_var_redeclaration_exception,
+    throw_non_redeclaration_in_function_def,
     throw_unknown_operator_exception,
-    throw_no_parent_scope_exception,
-    throw_conversion_exception
+    throw_conversion_exception,
+    throw_var_redeclaration_exception,
 )
-import re
-import random
 
 
 class PseudoInterpreter(PseudoVisitor):
-    def __init__(self, memory: Memory, functions: Functions):
-        self.memory = memory
-        self.functions = functions
+    def __init__(self, initialStackFrame: StackFrame, functions: Functions = None):
         self.inFunctionCall = False
-    
-    def visitPrintStatement(self, ctx):
-        value = self.visit(ctx.expr())
-        print(value)
+        self.stack: Stack[StackFrame] = Stack()
+        self.stack.push(initialStackFrame)
+        self.functions = functions
+        self.currentFrame: StackFrame = initialStackFrame
+
+    def visitVarDeclStatement(self, ctx: PseudoParser.VarDeclStatementContext):
+        var_id = ctx.ID().getText()
+        var_type = ctx.TYPE().getText()
+        decl_line = ctx.start.line
+        is_global = ctx.global_ != None
+        currentVariablesStoringObject = (
+            self.currentFrame.globalVariables
+            if is_global
+            else self.currentFrame.localVariables
+        )
+
+        if self.currentFrame.localVariables.check_var(var_id) or self.currentFrame.globalVariables.check_var(var_id):
+            throw_var_redeclaration_exception(
+                ctx.start.line, ctx.start.column, var_id, decl_line
+            )
+
+        currentVariablesStoringObject.set_var(var_id, None, decl_line, var_type)
+
+        if ctx.op:
+            value = self.visit(ctx.expr())
+            try:
+                if var_type == "string":
+                    if not re.fullmatch(r'(?:\\.|(?!(["\'])).)*', str(value)):
+                        raise ValueError
+
+                elif var_type == "int":
+                    if not re.fullmatch(r"-?\d+\.?\d*", str(value)):
+                        raise ValueError
+                    value = int(value)
+
+                elif var_type == "float":
+                    if not re.fullmatch(r"-?\d+\.?\d*", str(value)):
+                        raise ValueError
+                    value = float(value)
+
+                elif var_type == "boolean":
+                    if not str(value) in ["True", "False"]:
+                        raise ValueError
+                    value = str(value) == "True"
+
+                else:
+                    throw_wrong_type_exception(
+                        ctx.start.line, ctx.start.column, var_type
+                    )
+            except Exception as e:
+                throw_wrong_type_exception(ctx.start.line, ctx.start.column, var_type)
+
+            currentVariablesStoringObject.set_value(var_id, value)
 
     def get_nummeric_value(self, var: str):
         return float(var) if "." in var else int(var)
+
+    def visitPrintStatement(self, ctx):
+        value = self.visit(ctx.expr())
+        print(value)
 
     def visitExpr(self, ctx):
         if ctx.getChildCount() == 3 and ctx.getChild(0).getText() == "(":
@@ -39,13 +91,12 @@ class PseudoInterpreter(PseudoVisitor):
 
         if ctx.ID():
             var_id = ctx.ID().getText()
-            if self.memory.check_var(var_id) is False:
-                throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id)
+            if self.currentFrame.localVariables.check_var(var_id):
+                return self.currentFrame.localVariables.get_var(var_id)["value"]
+            elif self.currentFrame.globalVariables.check_var(var_id):
+                return self.currentFrame.globalVariables.get_var(var_id)["value"]
             else:
-                try:
-                    return self.memory.get_var(var_id)["value"]
-                except NameError:
-                    throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id)
+                throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id)
 
         elif ctx.STRING():
             value = ctx.STRING().getText()[1:-1]
@@ -57,20 +108,6 @@ class PseudoInterpreter(PseudoVisitor):
 
         elif ctx.NUMBER() or ctx.DOUBLE():
             return self.get_nummeric_value(ctx.getText())
-        
-        elif ctx.op and ctx.op.type == PseudoParser.PARENT:
-            if self.memory.parent and not self.memory.name.startswith("function_scope_"):
-                current_mem = self.memory
-                self.memory = self.memory.parent
-                val = self.visit(ctx.expr(0))
-                self.memory = current_mem
-                return val
-            elif self.memory.parent:
-                throw_undefined_name_exception(
-                    ctx.start.line, ctx.start.column, ctx.expr(0).getText()
-                )
-            else:
-                throw_no_parent_scope_exception(ctx.start.line, ctx.start.column)
 
         elif ctx.op and ctx.op.type == PseudoParser.TYPE:
             parse_type = ctx.TYPE().getText()
@@ -87,7 +124,10 @@ class PseudoInterpreter(PseudoVisitor):
                         return bool(value)
                 except Exception as e:
                     throw_conversion_exception(
-                        ctx.start.line, ctx.start.column, parse_type, type(value).__name__
+                        ctx.start.line,
+                        ctx.start.column,
+                        parse_type,
+                        type(value).__name__,
                     )
 
         elif ctx.op and ctx.op.type == PseudoParser.PLUS:
@@ -235,6 +275,7 @@ class PseudoInterpreter(PseudoVisitor):
                     type(left_value).__name__,
                     type(right_value).__name__,
                 )
+
         elif ctx.op and ctx.op.type == PseudoParser.GREATEREQUAL:
             left_value = self.visit(ctx.expr(0))
             right_value = self.visit(ctx.expr(1))
@@ -253,7 +294,6 @@ class PseudoInterpreter(PseudoVisitor):
                     type(right_value).__name__,
                 )
 
-
         elif ctx.op and ctx.op.type == PseudoParser.SMALLER:
             left_value = self.visit(ctx.expr(0))
             right_value = self.visit(ctx.expr(1))
@@ -271,6 +311,7 @@ class PseudoInterpreter(PseudoVisitor):
                     type(left_value).__name__,
                     type(right_value).__name__,
                 )
+
         elif ctx.op and ctx.op.type == PseudoParser.SMALLEREQUAL:
             left_value = self.visit(ctx.expr(0))
             right_value = self.visit(ctx.expr(1))
@@ -315,76 +356,40 @@ class PseudoInterpreter(PseudoVisitor):
         else:
             return self.visitChildren(ctx)
 
-    def visitVarDeclStatement(self, ctx):
-        var_id = ctx.ID().getText()
-        var_type = ctx.TYPE().getText()
-        decl_line = ctx.start.line
-        if self.inFunctionCall:
-            if var_id in self.memory.variables.keys():
-                decl_line = self.memory.variables[var_id]["decl_line"]
-                throw_var_redeclaration_exception(ctx.start.line, ctx.start.column, var_id, decl_line)
-            else:
-                self.memory.set_var(var_id, None, decl_line, var_type)
-        if ctx.op:
-            value = self.visit(ctx.expr())
-            try:
-                if var_type == "string":
-                    if not re.fullmatch(r'(?:\\.|(?!(["\'])).)*', str(value)):
-                        raise ValueError
-
-                elif var_type == "int":
-                    if not re.fullmatch(r"-?\d+\.?\d*", str(value)):
-                        raise ValueError
-                    value = int(value)
-
-                elif var_type == "float":
-                    if not re.fullmatch(r"-?\d+\.?\d*", str(value)):
-                        raise ValueError
-                    value = float(value)
-
-                elif var_type == "boolean":
-                    if not str(value) in ["True", "False"]:
-                        raise ValueError
-                    value = str(value) == "True"
-
-                else:
-                    throw_wrong_type_exception(
-                        ctx.start.line, ctx.start.column, var_type
-                    )
-            except Exception as e:
-                throw_wrong_type_exception(ctx.start.line, ctx.start.column, var_type)
-            if self.memory.check_var(var_id):
-                self.memory.set_value(var_id, value)
-
     def visitAssignmentStatement(self, ctx):
         var_id = ctx.ID().getText()
-        try:
-            var = self.memory.get_var(var_id)
-            var_type = var["type"] if var else "unknown"
-            if ctx.op and ctx.op.type == PseudoParser.INCREMENT:
-                val = var["value"]
-                if isinstance(val, int):
-                    self.memory.set_value(var_id, val + 1)
-                elif isinstance(val, float):
-                    self.memory.set_value(var_id, val + 1.0)
-                else:
-                    throw_wrong_type_exception(
-                        ctx.start.line, ctx.start.column, type(val).__name__
-                    )
-            elif ctx.op and ctx.op.type == PseudoParser.DECREMENT:
-                val = var["value"]
-                if isinstance(val, int):
-                    self.memory.set_value(var_id, val - 1)
-                elif isinstance(val, float):
-                    self.memory.set_value(var_id, val - 1.0)
-                else:
-                    throw_unknown_operator_exception(
-                        ctx.start.line, ctx.start.column, ctx.op.text
-                    )
+        is_global = ctx.global_ != None
+        currentVariablesStoringObject = (
+            self.currentFrame.globalVariables
+            if is_global
+            else self.currentFrame.localVariables
+        )
+        var_type = currentVariablesStoringObject.get_var(var_id)["type"]
+
+        if ctx.op and ctx.op.type == PseudoParser.INCREMENT:
+            val = currentVariablesStoringObject.get_var(var_id)["value"]
+            if isinstance(val, int):
+                currentVariablesStoringObject.set_value(var_id, val + 1)
+            elif isinstance(val, float):
+                currentVariablesStoringObject.set_value(var_id, val + 1.0)
             else:
-                value = self.visit(ctx.expr())
-                if self.memory.check_var(var_id) is False:
-                    throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id)
+                throw_wrong_type_exception(
+                    ctx.start.line, ctx.start.column, type(val).__name__
+                )
+        elif ctx.op and ctx.op.type == PseudoParser.DECREMENT:
+            val = currentVariablesStoringObject.get_var(var_id)["value"]
+            if isinstance(val, int):
+                currentVariablesStoringObject.set_value(var_id, val - 1)
+            elif isinstance(val, float):
+                currentVariablesStoringObject.set_value(var_id, val - 1.0)
+            else:
+                throw_unknown_operator_exception(
+                    ctx.start.line, ctx.start.column, ctx.op.text
+                )
+        else:
+            value = self.visit(ctx.expr())
+            if currentVariablesStoringObject.check_var(var_id) is False:
+                throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id)
 
                 try:
                     if var_type == "string":
@@ -413,54 +418,7 @@ class PseudoInterpreter(PseudoVisitor):
                 except Exception:
                     throw_wrong_type_exception(ctx.start.line, ctx.start.column, var_type)
 
-                self.memory.set_value(var_id, value)
-        except NameError:
-            throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id)
-
-    def visitBreakStatement(self, ctx):
-        raise BreakException("Break statement encountered, exiting loop.")
-    def visitContinueStatement(self, ctx):
-        raise ContinueException("Continue statement encountered, skipping to next iteration of loop.")  
-        
-
-    def call_function(self, name, args, ctx):
-        func = self.functions.functions[name]
-
-        type_map = {
-            "int": int,
-            "float": float,
-            "string": str,
-            "boolean": bool,
-            "void": type(None),
-        }
-
-        if len(args) != len(func["params"]):
-            raise Exception("Wrong parameters number!")
-
-        for param, arg in zip(func["params"], args):
-
-            var_name = param
-            var_type = func["params"][var_name]
-            if not isinstance(arg, type_map[var_type]):
-                raise Exception("Wrong parameter type!")
-
-            decl_line = ctx.start.line
-            if var_name in self.memory.variables.keys():
-                decl_line = func["decl_line"]
-                throw_non_redeclaration_in_function_def(
-                    ctx.start.line, ctx.start.column, var_name, decl_line
-                )
-            else:
-                self.memory.set_var(var_name, arg, decl_line, var_type)
-        for stmt in func["body"].statement():
-            self.visit(stmt)
-
-    def visitReturnStatement(self, ctx):
-        value = self.visit(ctx.val)
-        raise ReturnException(value)
-
-    def visitFunctionDef(self, ctx):
-        return None
+            currentVariablesStoringObject.set_value(var_id, value)
 
     def visitIfStatement(self, ctx: PseudoParser.IfStatementContext):
         if self.visit(ctx.expr(0)):
@@ -480,89 +438,134 @@ class PseudoInterpreter(PseudoVisitor):
                 self.visit(stmt)
 
     def visitWhileStatement(self, ctx: PseudoParser.WhileStatementContext):
-        if self.inFunctionCall:
-            new_scope = Memory(name=f"while_function_scope_line_{ctx.start.line}_{random.randint(0, 1000)}")
-            self.memory.add_child(new_scope)
-            self.memory = new_scope
-        else:
-            self.memory = self.memory.get_child(f"while_scope_line_{ctx.start.line}")
         condition = self.visit(ctx.expr())
         if not isinstance(condition, bool):
             throw_wrong_type_exception(ctx.start.line, ctx.start.column, "boolean")
+
+        listener = Listener(self.currentFrame, self, functions=self.functions)
+        walker = ParseTreeWalker()
+
         while condition:
+            walker.walk(listener, ctx.body())
+
             try:
-                for stmt in ctx.body().statement():
-                    self.visit(stmt)
+                self.visit(ctx.body())
+            except ContinueException:
+                continue
             except BreakException:
                 break
-            except ContinueException:
-                condition = self.visit(ctx.expr())
+
             condition = self.visit(ctx.expr())
-        self.memory = self.memory.parent
 
     def visitForStatement(self, ctx: PseudoParser.ForStatementContext):
-        if self.inFunctionCall:
-            new_scope = Memory(name=f"for_function_scope_line_{ctx.start.line}_{random.randint(0, 1000)}")
-            self.memory.add_child(new_scope)
-            self.memory = new_scope
-            if ctx.varDeclStatement():
-                self.visitVarDeclStatement(ctx.varDeclStatement())
-        else:
-            self.memory = self.memory.get_child(f"for_scope_line_{ctx.start.line}")
-            if ctx.varDeclStatement():
-                self.visitAssignmentStatement(ctx.varDeclStatement())
+        if ctx.varDeclStatement():
+            self.visit(ctx.varDeclStatement())
 
-        condition = self.visit(ctx.expr())
+        condition = self.visit(ctx.expr()) if ctx.expr() else True
+
+        listener = Listener(self.currentFrame, self, functions=self.functions)
+        walker = ParseTreeWalker()
+
         while condition:
             if not isinstance(condition, bool):
                 throw_wrong_type_exception(ctx.start.line, ctx.start.column, "boolean")
             if ctx.body():
+                walker.walk(listener, ctx.body())
                 try:
-                    for statement in ctx.body().statement():
-                        try:
-                            self.visit(statement)
-                        except ContinueException:
-                            break
+                    self.visit(ctx.body())
+                except ContinueException:
+                    continue
                 except BreakException:
-                   break 
-            if ctx.assignmentStatement():
-                self.visit(ctx.assignmentStatement())
-            condition = self.visit(ctx.expr())
-        self.memory = self.memory.parent
+                    break
+                finally:
+                    if ctx.assignmentStatement():
+                        self.visit(ctx.assignmentStatement())
 
-    def visitFunctionCallStatement(self, ctx: PseudoParser.FunctionCallStatementContext):
-        self.inFunctionCall = True
-        fun_name = ctx.ID().getText()
-        if not self.functions.get_fun(fun_name):
-            throw_non_defined_function_exception(
-                ctx.start.line, ctx.start.column, fun_name
+            condition = self.visit(ctx.expr()) if ctx.expr() else True
+
+        if ctx.varDeclStatement():
+            self.currentFrame.localVariables.del_var(
+                ctx.varDeclStatement().ID().getText()
             )
-        self.functions.call_fun(fun_name)
 
-        func = self.functions.get_fun(fun_name)
+    def visitFunctionCallStatement(
+        self, ctx: PseudoParser.FunctionCallStatementContext
+    ):
+        name = ctx.ID().getText()
+
+        if not self.functions.check_fun(name):
+            throw_non_defined_function_exception(ctx.start.line, ctx.start.column, name)
 
         args = []
         if ctx.argumentList():
             for expr_ctx in ctx.argumentList().expr():
                 args.append(self.visit(expr_ctx))
-
-        new_scope = Memory(name=f"function_scope_line_{fun_name}_call_{func["num_called"]}")
-        self.memory.add_child(new_scope)
-        self.memory = new_scope
-        name = fun_name
-        if name not in self.functions.functions.keys():
-            throw_non_defined_function_exception(
-                ctx.start.line, ctx.start.column, ctx.name.text
-            )
-
         try:
+            newStackFrame = self.currentFrame.geniusCopy()
+            newStackFrame.returnAddress = self.currentFrame
+            self.stack.push(newStackFrame)
+            self.currentFrame = self.stack.peek()
             self.call_function(name, args, ctx)
-            self.memory = self.memory.parent
-            self.inFunctionCall = False
         except ReturnException as ret:
-            self.memory = self.memory.parent
-            self.inFunctionCall = False
+            if self.functions.get_fun(name)['return_type'] == 'void':
+                raise Exception('Error: Void functions cannot return values.')
             return ret.value
+        except Exception as e:
+            raise
+        finally:
+            self.stack.pop()
+            self.currentFrame = self.stack.peek()
+
+    def call_function(self, name, args, ctx):
+        func = self.functions.get_fun(name)
+
+        types_map = {
+            "int": int,
+            "float": float,
+            "string": str,
+            "boolean": bool,
+            "void": type(None),
+        }
+
+        if len(args) != len(func["params"]):
+            raise Exception("Error: Wrong parameters number!")
+
+        for param, arg in zip(func["params"], args):
+
+            var_name = param
+            var_type = func["params"][var_name]
+            if not isinstance(arg, types_map[var_type]):
+                raise Exception("Error: Wrong parameter type!")
+
+            decl_line = ctx.start.line
+            if self.currentFrame.localVariables.check_var(var_name):
+                decl_line = func["decl_line"]
+                throw_non_redeclaration_in_function_def(
+                    ctx.start.line, ctx.start.column, var_name, decl_line
+                )
+            else:
+                self.currentFrame.localVariables.set_var(
+                    var_name, arg, decl_line, var_type
+                )
+
+        listener = Listener(self.currentFrame, self, functions=self.functions)
+        walker = ParseTreeWalker()
+        tree = func["body"]
+        walker.walk(listener, tree)
+        self.visit(tree)
+
+    def visitReturnStatement(self, ctx):
+        value = self.visit(ctx.val)
+        raise ReturnException(value)
+
+    def visitFunctionDef(self, ctx):
+        return None
+
+    def visitContinueStatement(self, ctx):
+        raise ContinueException("No message")
+
+    def visitBreakStatement(self, ctx):
+        raise BreakException("No message")
 
 
 class ReturnException(Exception):
@@ -580,10 +583,22 @@ class BreakException(Exception):
         self.value = value
 
 
+class ContinueException(Exception):
+    def __init__(self, value):
+        self.value = value
+
+
+class BreakException(Exception):
+    def __init__(self, value):
+        self.value = value
+
+
 def run_interpreter(inputStream=None):
     try:
         inputStream = (
-            inputStream if inputStream else FileStream("program.pseudo", encoding="utf-8")
+            inputStream
+            if inputStream
+            else FileStream("program.pseudo", encoding="utf-8")
         )
         lexer = PseudoLexer(inputStream)
         stream = CommonTokenStream(lexer)
@@ -594,12 +609,19 @@ def run_interpreter(inputStream=None):
 
         tree = parser.program()
 
-        memory = Memory()
+        initialStackFrame = StackFrame(
+            globalVariables=Variables(),
+        )
+
         functions = Functions()
-        interpreter = PseudoInterpreter(memory, functions)
-        listener = Listener(memory, interpreter, functions)
+
+        interpreter = PseudoInterpreter(
+            initialStackFrame=initialStackFrame, functions=functions
+        )
+        listener = Listener(initialStackFrame, interpreter, functions=functions)
         walker = ParseTreeWalker()
         walker.walk(listener, tree)
+
         interpreter.visit(tree)
 
     except Exception as e:
@@ -607,16 +629,14 @@ def run_interpreter(inputStream=None):
         return
 
 
-run_interpreter()
+if __name__ == "__main__":
+    run_interpreter()
 
 # TODO
-# Zarządzanie pamięcią, stos - Maciek
-# Zrobienie testów - Maciek
 # Zrobić porządek w gramatyce - Maciek
 # Zaawansowana diagnostyka błędów
 # Rzutowanie typów - Robert
 # Napisanie dokumentacji - Kacper
-# Dorobić operatory: ">=" "<="
 
 # dodatkowe TODO, fajne rzeczy nietrudne do zrobienia:
 # dopracowanie języka: obsługa skróconych operatorów '+=', '-+' '*=' ...

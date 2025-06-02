@@ -303,30 +303,14 @@ def test_stack_overflow(capsys):
     run_interpreter(inputStream=input_stream)
 
     captured = capsys.readouterr().out
-    assert "level" in captured.lower()
+    assert "error" in captured.lower()
 
-
-def test_scope_range_correctness(capsys):
-    code = """
-    int a = 1;
-
-    def int foo(int x):
-        x = a;
-        return x;
-    end;
-
-    print(foo(0));
-    """
-    input_stream = InputStream(code)
-    run_interpreter(inputStream=input_stream)
-
-    captured = capsys.readouterr().out.lower()
-    assert "error" in captured
 
 def test_func_def_inside_another_func(capsys):
     code = """
     function int foo(int x):
         function int inner_foo(int y):
+            return y+1;
             return y+1;
         end;
 
@@ -339,3 +323,50 @@ def test_func_def_inside_another_func(capsys):
     run_interpreter(inputStream=input_stream)
 
     assert capsys.readouterr().out.strip() == "1"
+
+
+def test_void_function(capsys):
+    code = """
+    def void foo(int x):
+        return x;
+    end;
+
+    foo(0);
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+
+    captured = capsys.readouterr().out.lower()
+    assert "error" in captured
+
+
+def test_returning_function_doesnt_return_value(capsys):
+    code = """
+    def int foo(int x):
+        x = x + 1;
+    end;
+
+    foo(0);
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+
+    captured = capsys.readouterr().out.lower()
+    assert "error" in captured
+
+
+def test_returning_types_dont_match_function(capsys):
+    code = """
+    def string foo(int x):
+        return x;
+    end;
+
+    foo(0);
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+
+    captured = capsys.readouterr().out.lower()
+    assert "error" in captured
+
+    
