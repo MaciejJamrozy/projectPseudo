@@ -7,6 +7,7 @@ import re
 from PseudoExceptions import (
     throw_non_redeclaration_in_function_def,
     throw_non_redeclaration_in_function_def,
+    throw_function_redeclaration
 )
 
 
@@ -18,10 +19,16 @@ class Listener(PseudoListener):
         self.functions = functions
 
     def enterFunctionDef(self, ctx):
+        if self.inFunctionDef:
+            return
         self.inFunctionDef = True
         name = ctx.name.text
         return_type = ctx.type_.text
         body = ctx.block
+
+        if self.functions.check_fun(name):
+            decl_line = self.functions.get_fun(name)["decl_line"]
+            throw_function_redeclaration(ctx.start.line, ctx.start.column, name, decl_line)
 
         params = {}
         if ctx.paramList():

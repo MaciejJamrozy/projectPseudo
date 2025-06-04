@@ -30,6 +30,8 @@ class PseudoInterpreter(PseudoVisitor):
         self.currentFrame: StackFrame = initialStackFrame
 
     def visitVarDeclStatement(self, ctx: PseudoParser.VarDeclStatementContext):
+        if ctx.op:
+            value = self.visit(ctx.expr())
         var_id = ctx.ID().getText()
         var_type = ctx.TYPE().getText()
         decl_line = ctx.start.line
@@ -40,7 +42,9 @@ class PseudoInterpreter(PseudoVisitor):
             else self.currentFrame.localVariables
         )
 
-        if self.currentFrame.localVariables.check_var(var_id) or self.currentFrame.globalVariables.check_var(var_id):
+        if self.currentFrame.localVariables.check_var(
+            var_id
+        ) or self.currentFrame.globalVariables.check_var(var_id):
             throw_var_redeclaration_exception(
                 ctx.start.line, ctx.start.column, var_id, decl_line
             )
@@ -48,7 +52,6 @@ class PseudoInterpreter(PseudoVisitor):
         currentVariablesStoringObject.set_var(var_id, None, decl_line, var_type)
 
         if ctx.op:
-            value = self.visit(ctx.expr())
             try:
                 if var_type == "string":
                     if not re.fullmatch(r'(?:\\.|(?!(["\'])).)*', str(value)):
@@ -358,12 +361,12 @@ class PseudoInterpreter(PseudoVisitor):
 
     def visitAssignmentStatement(self, ctx):
         var_id = ctx.ID().getText()
-        is_global = ctx.global_ != None
         currentVariablesStoringObject = (
-            self.currentFrame.globalVariables
-            if is_global
-            else self.currentFrame.localVariables
+            self.currentFrame.localVariables
+            if self.currentFrame.localVariables.check_var(var_id)
+            else self.currentFrame.globalVariables
         )
+
         var_type = currentVariablesStoringObject.get_var(var_id)["type"]
 
         if ctx.op and ctx.op.type == PseudoParser.INCREMENT:
@@ -392,14 +395,20 @@ class PseudoInterpreter(PseudoVisitor):
                 throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id)
 
             try:
-                if var_type == "string":
-                    if not re.fullmatch(r'(?:\\.|(?!(["\'])).)*', str(value)):
-                        raise ValueError
-                        
+                if var_type == "string" and not isinstance(value, str):
+                    # if not re.fullmatch(r'(?:\\.|(?!(["\'])).)*', str(value)):
+                    #     pass
+                    raise ValueError
+
                 elif var_type == "int":
-                    if not bool(re.fullmatch(r"-?\d+\.?\d*", str(value))):
-                        raise ValueError
-                    value = int(value)
+                    if isinstance(value, str):
+                        if not re.fullmatch(r"-?\d+", value):
+                            raise ValueError("Invalid int literal")
+                        value = int(value)
+                    elif isinstance(value, int):
+                        pass
+                    else:
+                        raise ValueError("Cannot assign non-int to int variable")
 
                 elif var_type == "float":
                     if not re.fullmatch(r"-?\d+\.?\d*", str(value)):
@@ -494,6 +503,14 @@ class PseudoInterpreter(PseudoVisitor):
     ):
         name = ctx.ID().getText()
 
+        types_map = {
+            "int": int,
+            "float": float,
+            "string": str,
+            "boolean": bool,
+            "void": type(None),
+        }
+
         if not self.functions.check_fun(name):
             throw_non_defined_function_exception(ctx.start.line, ctx.start.column, name)
 
@@ -501,15 +518,27 @@ class PseudoInterpreter(PseudoVisitor):
         if ctx.argumentList():
             for expr_ctx in ctx.argumentList().expr():
                 args.append(self.visit(expr_ctx))
+
+        e = None
         try:
             newStackFrame = self.currentFrame.geniusCopy()
             newStackFrame.returnAddress = self.currentFrame
             self.stack.push(newStackFrame)
             self.currentFrame = self.stack.peek()
             self.call_function(name, args, ctx)
+
+            if self.functions.get_fun(name)["return_type"] != "void":
+                raise Exception("Error: Function doesnt return value, but it should.")
+
         except ReturnException as ret:
-            if self.functions.get_fun(name)['return_type'] == 'void':
-                raise Exception('Error: Void functions cannot return values.')
+            if self.functions.get_fun(name)["return_type"] == "void":
+                raise Exception("Error: Void functions cannot return values.")
+
+            return_type = self.functions.get_fun(name)["return_type"]
+            if not isinstance(ret.value, types_map[return_type]):
+                raise Exception(
+                    "Error: Returned value doesnt match with declared in function."
+                )
             return ret.value
         except Exception as e:
             raise

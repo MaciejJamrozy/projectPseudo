@@ -14,6 +14,49 @@ def test_variable_declaration_and_assignment(capsys):
     run_interpreter(inputStream=input_stream)
     assert capsys.readouterr().out.strip() == "5"
 
+def test_string_assignment_to_int_variable(capsys):
+    code = """
+    int a = 5;
+
+    a = '5';
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+    captured = capsys.readouterr().out.strip().lower()
+    assert 'error' in captured
+
+def test_int_assignment_to_string_variable(capsys):
+    code = """
+    string a = 's';
+
+    a = 5;
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+    captured = capsys.readouterr().out.strip().lower()
+    assert 'error' in captured
+
+def test_boolean_assignment_to_int_variable(capsys):
+    code = """
+    int a = 5;
+
+    a = True;
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+    captured = capsys.readouterr().out.strip().lower()
+    assert 'error' in captured
+
+def test_boolean_assignment_to_string_variable(capsys):
+    code = """
+    string a = 'a';
+
+    a = True;
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+    captured = capsys.readouterr().out.strip().lower()
+    assert 'error' in captured
 
 def test_variable_reassignment(capsys):
     code = """
@@ -32,6 +75,7 @@ def test_variable_scope(capsys):
     function int test():
         int x = 2;
         print(x);
+        return x;
     end;
 
     test();

@@ -34,13 +34,15 @@ def throw_non_redeclaration_in_function_def(line, col, name, line_defined):
     )
 
 
+def throw_function_redeclaration(line, col, name, decl_line):
+    raise Exception(
+        f"Error in line: {line}, column: {col}: Redeclaration of function \'{name}\'. It was declared at line {decl_line}."
+    )
+
+
 def throw_unknown_operator_exception(line, col, op):
     raise Exception(f'Error in line: {line}, column: {col}: unkown operator "{op}".')
 
-def throw_no_parent_scope_exception(line, col):
-    raise Exception(
-        f"Error in line: {line}, column: {col}: no parent scope found, cannot access parent variables."
-    )
 
 def throw_conversion_exception(line, col, from_type, to_type):
     raise Exception(

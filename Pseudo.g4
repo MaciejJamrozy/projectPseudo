@@ -126,8 +126,6 @@ GREATER: '>' | 'greater than';
 SMALLER: '<' | 'smaller than';
 GREATEREQUAL: '>=' | 'greater or equal than';
 SMALLEREQUAL: '<=' | 'smaller or equal than';
-GREATEREQUAL: '>=' | 'greater or equal than';
-SMALLEREQUAL: '<=' | 'smaller or equal than';
 EQUAL: '==' | 'equals';
 DIFFERENT: '!=' | 'differs';
 AND: '&&' | 'and';

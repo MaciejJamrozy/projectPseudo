@@ -311,7 +311,6 @@ def test_func_def_inside_another_func(capsys):
     function int foo(int x):
         function int inner_foo(int y):
             return y+1;
-            return y+1;
         end;
 
         return inner_foo(x);
@@ -325,7 +324,7 @@ def test_func_def_inside_another_func(capsys):
     assert capsys.readouterr().out.strip() == "1"
 
 
-def test_void_function(capsys):
+def test_void_function_with_return(capsys):
     code = """
     def void foo(int x):
         return x;
@@ -368,5 +367,22 @@ def test_returning_types_dont_match_function(capsys):
 
     captured = capsys.readouterr().out.lower()
     assert "error" in captured
+
+
+def test_function_redeclaration(capsys):
+    code = """
+    def string foo(int x):
+        return "sth";
+    end;
+
+    def void foo(float y):
+    end;
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+
+    captured = capsys.readouterr().out.lower()
+    assert "error" in captured
+
 
     

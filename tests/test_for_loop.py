@@ -233,8 +233,6 @@ def test_redeclaration_inside_while_loop(capsys):
         for (int j = 0; j < 2; j++):
         end loop;
     end loop;
-    
-    print(y);
     """
     input_stream = InputStream(code)
     run_interpreter(inputStream=input_stream)
