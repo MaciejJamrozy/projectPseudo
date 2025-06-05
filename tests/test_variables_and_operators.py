@@ -151,18 +151,6 @@ def test_float_to_int_conversion(capsys):
     assert capsys.readouterr().out.strip() == "2"
 
 
-def test_invalid_cast(capsys):
-    code = """
-    int x;
-    x = (int)"hello";
-    print(x);
-    """
-    input_stream = InputStream(code)
-    run_interpreter(inputStream=input_stream)
-    output = capsys.readouterr().out.strip().lower()
-    assert "error" in output.lower()
-
-
 def test_int_to_string_conversion(capsys):
     code = """
     string x;
@@ -194,6 +182,18 @@ def test_boolean_to_string_conversion(capsys):
     input_stream = InputStream(code)
     run_interpreter(inputStream=input_stream)
     assert capsys.readouterr().out.strip() == "True"
+
+
+def test_invalid_cast(capsys):
+    code = """
+    int x;
+    x = (int)"hello";
+    print(x);
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+    output = capsys.readouterr().out.strip().lower()
+    assert "error" in output.lower()
 
 
 def test_arithmetic_operators(capsys):
