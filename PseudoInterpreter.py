@@ -521,8 +521,13 @@ class PseudoInterpreter(PseudoVisitor):
             condition = self.visit(ctx.expr())['value']
 
     def visitForStatement(self, ctx: PseudoParser.ForStatementContext):
-        if ctx.varDeclStatement():
-            self.visit(ctx.varDeclStatement())
+        newStackFrame = self.currentFrame.normalCopy()
+        newStackFrame.returnAddress = self.currentFrame
+        self.stack.push(newStackFrame)
+        self.currentFrame = self.stack.peek()
+
+        if ctx.entryStmt:
+            self.visit(ctx.initStatement())
 
         condition = self.visit(ctx.expr())['value'] if ctx.expr() else True
 
@@ -546,10 +551,8 @@ class PseudoInterpreter(PseudoVisitor):
 
             condition = self.visit(ctx.expr())['value'] if ctx.expr() else True
 
-        if ctx.varDeclStatement():
-            self.currentFrame.localVariables.del_var(
-                ctx.varDeclStatement().ID().getText()
-            )
+        self.stack.pop()
+        self.currentFrame = self.stack.peek()
 
     def visitFunctionCallStatement(
         self, ctx: PseudoParser.FunctionCallStatementContext

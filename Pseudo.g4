@@ -29,7 +29,12 @@ ifStatement:
 whileStatement: 'while' '(' expr ')' ':' body 'end' ('loop')?;
 
 forStatement:
-	'for' '(' varDeclStatement? ';' expr? ';' assignmentStatement? ')' ':' body 'end' ('loop')?;
+	'for' '(' (entryStmt=initStatement)? ';' expr? ';' assignmentStatement? ')' ':' body 'end' ('loop')?;
+
+initStatement
+	: varDeclStatement
+	| assignmentStatement
+	;
 
 breakStatement: 'break' ('loop')? | 'exit' ('loop')?;
 

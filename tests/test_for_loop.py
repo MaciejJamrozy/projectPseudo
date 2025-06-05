@@ -223,7 +223,7 @@ def test_declaration_inside_while_loop(capsys):
     """
     input_stream = InputStream(code)
     run_interpreter(inputStream=input_stream)
-    assert capsys.readouterr().out.strip() == "11"
+    assert "undefined" in capsys.readouterr().out.strip()
 
 
 def test_redeclaration_inside_while_loop(capsys):
