@@ -339,3 +339,50 @@ def test_func_def_inside_another_func(capsys):
     run_interpreter(inputStream=input_stream)
 
     assert capsys.readouterr().out.strip() == "1"
+
+
+def test_void_function(capsys):
+    code = """
+    def void foo(int x):
+        return x;
+    end;
+
+    foo(0);
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+
+    captured = capsys.readouterr().out.lower()
+    assert "error" in captured
+
+
+def test_returning_function_doesnt_return_value(capsys):
+    code = """
+    def int foo(int x):
+        x = x + 1;
+    end;
+
+    foo(0);
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+
+    captured = capsys.readouterr().out.lower()
+    assert "error" in captured
+
+
+def test_returning_types_dont_match_function(capsys):
+    code = """
+    def bool foo(string x):
+        return x;
+    end;
+
+    foo("TEST");
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+
+    captured = capsys.readouterr().out.lower()
+    assert "error" in captured
+
+    

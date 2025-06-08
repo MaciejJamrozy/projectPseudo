@@ -557,9 +557,27 @@ class PseudoInterpreter(PseudoVisitor):
 
         try:
             self.call_function(name, args, ctx)
+            if func["return_type"] != "void":
+                throw_wrong_type_exception(
+                    ctx.start.line, ctx.start.column, func["return_type"]
+                )
             self.memory = self.memory.parent
             self.inFunctionCall = False
         except ReturnException as ret:
+            if ret.value is not None:
+                var_type = self.functions.get_fun(name)["return_type"]
+                if var_type == "void":
+                    throw_wrong_type_exception(
+                        ctx.start.line, ctx.start.column, var_type
+                    )
+
+                if not isinstance(ret.value, var_type):
+                    throw_wrong_type_exception(
+                        ctx.start.line, ctx.start.column, var_type
+                    )
+                
+
+
             self.memory = self.memory.parent
             self.inFunctionCall = False
             return ret.value
