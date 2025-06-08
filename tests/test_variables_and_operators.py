@@ -132,7 +132,7 @@ def test_declaration_without_assignment_then_use(capsys):
 def test_int_to_float_conversion(capsys):
     code = """
     float x;
-    x = (float)2;
+    x = float(2);
     print(x);
     """
     input_stream = InputStream(code)
@@ -143,7 +143,7 @@ def test_int_to_float_conversion(capsys):
 def test_float_to_int_conversion(capsys):
     code = """
     int x;
-    x = (int)2.9;
+    x = int(2.9);
     print(x);
     """
     input_stream = InputStream(code)
@@ -154,7 +154,7 @@ def test_float_to_int_conversion(capsys):
 def test_int_to_string_conversion(capsys):
     code = """
     string x;
-    x = (string)42;
+    x = string(42);
     print(x);
     """
     input_stream = InputStream(code)
@@ -165,7 +165,7 @@ def test_int_to_string_conversion(capsys):
 def test_float_to_string_conversion(capsys):
     code = """
     string x;
-    x = (string)3.14;
+    x = string(3.14);
     print(x);
     """
     input_stream = InputStream(code)
@@ -176,7 +176,7 @@ def test_float_to_string_conversion(capsys):
 def test_boolean_to_string_conversion(capsys):
     code = """
     string x;
-    x = (string)True;
+    x = string(True);
     print(x);
     """
     input_stream = InputStream(code)
@@ -187,7 +187,7 @@ def test_boolean_to_string_conversion(capsys):
 def test_invalid_cast(capsys):
     code = """
     int x;
-    x = (int)"hello";
+    x = int("hello");
     print(x);
     """
     input_stream = InputStream(code)

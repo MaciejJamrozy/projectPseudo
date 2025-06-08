@@ -44,7 +44,7 @@ def throw_unknown_operator_exception(line, col, op):
     raise Exception(f'Error in line: {line}, column: {col}: unkown operator "{op}".')
 
 
-def throw_conversion_exception(line, col, from_type, to_type):
+def throw_conversion_exception(line, col, type, value):
     raise Exception(
-        f"Error in line: {line}, column: {col}: cannot convert from {from_type} to {to_type}."
+        f"Error in line: {line}, column: {col}: cannot convert {value} to {type}."
     )

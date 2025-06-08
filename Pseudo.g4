@@ -16,10 +16,13 @@ statement:
 
 printStatement: ('print' | 'shout') '(' expr ')';
 
-assignmentStatement
-	: (global = 'global')? ID op = ('=' | 'is' | '<<' | '<-') expr
-	| (global = 'global')? ID op = ('++' | '--')
-	;
+assignmentStatement: (global = 'global')? ID op = (
+		'='
+		| 'is'
+		| '<<'
+		| '<-'
+	) expr
+	| (global = 'global')? ID op = ('++' | '--');
 
 ifStatement:
 	'if' ('(' expr ')' | expr) (':' | 'then') body (
@@ -29,12 +32,11 @@ ifStatement:
 whileStatement: 'while' '(' expr ')' ':' body 'end' ('loop')?;
 
 forStatement:
-	'for' '(' (entryStmt=initStatement)? ';' expr? ';' assignmentStatement? ')' ':' body 'end' ('loop')?;
+	'for' '(' (entryStmt = initStatement)? ';' expr? ';' assignmentStatement? ')' ':' body 'end' (
+		'loop'
+	)?;
 
-initStatement
-	: varDeclStatement
-	| assignmentStatement
-	;
+initStatement: varDeclStatement | assignmentStatement;
 
 breakStatement: 'break' ('loop')? | 'exit' ('loop')?;
 
@@ -72,7 +74,9 @@ argumentList: expr (',' expr)*;
 body: ((functionDef | statement) ';')*;
 
 varDeclStatement:
-	(global = 'global')? TYPE ID (op = ('=' | 'is' | '<<' | '<-') expr)?;
+	(global = 'global')? TYPE ID (
+		op = ('=' | 'is' | '<<' | '<-') expr
+	)?;
 
 expr: ('input' | 'scan' | 'listen') '(' (STRING)? ')'
 	| functionCallStatement
@@ -100,7 +104,7 @@ expr: ('input' | 'scan' | 'listen') '(' (STRING)? ')'
 	| expr op = OR expr
 	| op = NOT expr
 	| op = PARENT expr
-	| '(' op = TYPE ')' expr
+	| op = TYPE '(' expr ')'
 	| '(' expr ')'
 	| STRING
 	| NUMBER

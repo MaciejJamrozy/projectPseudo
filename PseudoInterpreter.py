@@ -127,26 +127,26 @@ class PseudoInterpreter(PseudoVisitor):
             value = float(ctx.DOUBLE().getText())
             return {"type": "float", "value": value}
         
-        # elif ctx.op and ctx.op.type == PseudoParser.TYPE:
-        #     parse_type = ctx.TYPE().getText()
-        #     if ctx.expr(0):
-        #         value = self.visit(ctx.expr(0))
-        #         try:
-        #             if parse_type == "int":
-        #                 return int(value)
-        #             elif parse_type == "float":
-        #                 return float(value)
-        #             elif parse_type == "string":
-        #                 return str(value)
-        #             elif parse_type == "boolean":
-        #                 return bool(value)
-        #         except Exception as e:
-        #             throw_conversion_exception(
-        #                 ctx.start.line,
-        #                 ctx.start.column,
-        #                 parse_type,
-        #                 type(value).__name__,
-        #             )
+        elif ctx.op and ctx.op.type == PseudoParser.TYPE:
+            parse_type = ctx.TYPE().getText()
+            if ctx.expr(0):
+                value = self.visit(ctx.expr(0))["value"]
+                try:
+                    if parse_type == "int":
+                        return {"type": "int", "value": int(value)}
+                    elif parse_type == "float":
+                        return {"type": "float", "value": float(value)}
+                    elif parse_type == "string":
+                        return {"type": "string", "value": str(value)}
+                    elif parse_type == "boolean":
+                        return {"type": "boolean", "value": bool(value)}
+                except Exception as e:
+                    throw_conversion_exception(
+                        ctx.start.line,
+                        ctx.start.column,
+                        parse_type,
+                        value
+                    )
 
         elif ctx.op and ctx.op.type == PseudoParser.PLUS:
             left_value = self.visit(ctx.expr(0))['value']
