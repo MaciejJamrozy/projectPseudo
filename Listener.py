@@ -5,9 +5,9 @@ from StackFrame import StackFrame
 from Functions import Functions
 import re
 from PseudoExceptions import (
-    throw_non_redeclaration_in_function_def,
-    throw_non_redeclaration_in_function_def,
-    throw_function_redeclaration
+    throw_redeclaration_in_function_def_exception,
+    throw_redeclaration_in_function_def_exception,
+    throw_function_redeclaration_exception
 )
 
 
@@ -28,7 +28,7 @@ class Listener(PseudoListener):
 
         if self.functions.check_fun(name):
             decl_line = self.functions.get_fun(name)["decl_line"]
-            throw_function_redeclaration(ctx.start.line, ctx.start.column, name, decl_line)
+            throw_function_redeclaration_exception(ctx.start.line, ctx.start.column, name, decl_line)
 
         params = {}
         if ctx.paramList():
@@ -36,8 +36,9 @@ class Listener(PseudoListener):
                 param_type = param_ctx.TYPE().getText()
                 param_name = param_ctx.ID().getText()
                 if param_name in params.keys():
-                    throw_non_redeclaration_in_function_def(
-                        ctx.start.line, ctx.start.column, param_name, ctx.start.line
+                    column = param_ctx.ID().getSymbol().column
+                    throw_redeclaration_in_function_def_exception(
+                        ctx.start.line, column, param_name, ctx.start.line
                     )
                 else:
                     params[param_name] = param_type

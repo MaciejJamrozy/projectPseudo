@@ -14,19 +14,21 @@ from PseudoExceptions import (
     throw_undefined_name_exception,
     throw_wrong_type_exception,
     throw_non_defined_function_exception,
-    throw_non_redeclaration_in_function_def,
+    throw_redeclaration_in_function_def_exception,
     throw_unknown_operator_exception,
     throw_conversion_exception,
     throw_var_redeclaration_exception,
+    throw_no_parent_scope_exception
 )
 
 
 class PseudoInterpreter(PseudoVisitor):
-    def __init__(self, initialStackFrame: StackFrame, functions: Functions = None):
+    def __init__(self, initialStackFrame: StackFrame, functions: Functions = None, globalVariables = None):
         self.inFunctionCall = False
         self.stack: Stack[StackFrame] = Stack()
         self.stack.push(initialStackFrame)
         self.functions = functions
+        self.globalVariables: Variables = globalVariables
         self.currentFrame: StackFrame = initialStackFrame
 
     def visitVarDeclStatement(self, ctx: PseudoParser.VarDeclStatementContext):
@@ -38,15 +40,14 @@ class PseudoInterpreter(PseudoVisitor):
         decl_line = ctx.start.line
         is_global = ctx.global_ != None
         currentVariablesStoringObject = (
-            self.currentFrame.globalVariables
+            self.globalVariables
             if is_global
-            else self.currentFrame.localVariables
+            else self.currentFrame
         )
 
-        if self.currentFrame.localVariables.check_var(
+        if currentVariablesStoringObject.check_var(
             var_id
-        ) or self.currentFrame.globalVariables.check_var(var_id):
-            throw_var_redeclaration_exception(
+        ):  throw_var_redeclaration_exception(
                 ctx.start.line, ctx.start.column, var_id, decl_line
             )
 
@@ -98,17 +99,24 @@ class PseudoInterpreter(PseudoVisitor):
 
         if ctx.ID():
             var_id = ctx.ID().getText()
-            currentStoringObject = None
-            if self.currentFrame.localVariables.check_var(var_id):
-                currentStoringObject = self.currentFrame.localVariables
-            elif self.currentFrame.globalVariables.check_var(var_id):
-                currentStoringObject = self.currentFrame.globalVariables
+            if self.currentFrame.check_var(var_id):
+                var_dict = self.currentFrame.get_var(var_id)
+                return {"type": var_dict['type'], "value": var_dict['value']}
+            elif self.globalVariables.check_var(var_id):
+                var_dict = self.globalVariables.get_var(var_id)
+                return {"type": var_dict['type'], "value": var_dict['value']}
             else:
                 throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id)
 
-            value = currentStoringObject.get_var(var_id)["value"]
-            type =  currentStoringObject.get_var(var_id)["type"]
-            return {"type": type, "value": value}
+        elif ctx.op and ctx.op.type == PseudoParser.PARENT:
+            if self.currentFrame.isRoot:
+                throw_no_parent_scope_exception(ctx.start.line, ctx.start.column)
+            
+            returnFrame = self.currentFrame
+            self.currentFrame = self.currentFrame.returnAddress
+            var_dict = self.visit(ctx.expr(0))
+            self.currentFrame = returnFrame
+            return {"type": var_dict['type'], "value": var_dict['value']}
 
         elif ctx.STRING():
             value = ctx.STRING().getText()[1:-1]
@@ -418,9 +426,9 @@ class PseudoInterpreter(PseudoVisitor):
     def visitAssignmentStatement(self, ctx):
         var_id = ctx.ID().getText()
         currentVariablesStoringObject = (
-            self.currentFrame.localVariables
-            if self.currentFrame.localVariables.check_var(var_id)
-            else self.currentFrame.globalVariables
+            self.currentFrame
+            if self.currentFrame.check_var(var_id)
+            else self.globalVariables
         )
 
         var_type = currentVariablesStoringObject.get_var(var_id)["type"]
@@ -484,31 +492,76 @@ class PseudoInterpreter(PseudoVisitor):
             currentVariablesStoringObject.set_value(var_id, value['value'])
 
     def visitIfStatement(self, ctx: PseudoParser.IfStatementContext):
+
+        returnAddress = self.currentFrame
         if self.visit(ctx.expr(0))['value']:
-            for stmt in ctx.body(0).statement():
-                self.visit(stmt)
+            newStackFrame = self.currentFrame.copy()
+            newStackFrame.returnAddress = returnAddress
+            self.stack.push(newStackFrame)
+            self.currentFrame = self.stack.peek()
+
+            try:
+                for stmt in ctx.body(0).statement():
+                    self.visit(stmt)
+            except Exception:
+                raise
+            finally:
+                self.stack.pop()
+                self.currentFrame = self.stack.peek()
             return
 
         num_elseif = len(ctx.expr()) - 1
         for i in range(num_elseif):
+
             if self.visit(ctx.expr(i + 1))['value']:
-                for stmt in ctx.body(i + 1).statement():
-                    self.visit(stmt)
+                newStackFrame = self.currentFrame.copy()
+                newStackFrame.returnAddress = returnAddress
+                self.stack.push(newStackFrame)
+                self.currentFrame = self.stack.peek()
+
+                try:
+                    for stmt in ctx.body(i + 1).statement():
+                        self.visit(stmt)
+                except Exception:
+                    raise
+                finally:
+                    self.stack.pop()
+                    self.currentFrame = self.stack.peek()
                 return
 
         if ctx.body(num_elseif + 1) is not None:
-            for stmt in ctx.body(num_elseif + 1).statement():
-                self.visit(stmt)
+            newStackFrame = self.currentFrame.copy()
+            newStackFrame.returnAddress = returnAddress
+            self.stack.push(newStackFrame)
+            self.currentFrame = self.stack.peek()
+
+            try:
+                for stmt in ctx.body(num_elseif + 1).statement():
+                    self.visit(stmt)
+            except Exception:
+                raise
+            finally:
+                self.stack.pop()
+                self.currentFrame = self.stack.peek()
 
     def visitWhileStatement(self, ctx: PseudoParser.WhileStatementContext):
+        newStackFrame = self.currentFrame.copy()
+        newStackFrame.returnAddress = self.currentFrame
+        self.stack.push(newStackFrame)
+        self.currentFrame = self.stack.peek()
+
         condition = self.visit(ctx.expr())['value']
         if not isinstance(condition, bool):
             throw_wrong_type_exception(ctx.start.line, ctx.start.column, "boolean")
 
-        listener = Listener(self.currentFrame, self, functions=self.functions)
-        walker = ParseTreeWalker()
-
         while condition:
+            newStackFrame = self.currentFrame.copy()
+            newStackFrame.returnAddress = self.currentFrame
+            self.stack.push(newStackFrame)
+            self.currentFrame = self.stack.peek()
+            
+            listener = Listener(self.currentFrame, self, functions=self.functions)
+            walker = ParseTreeWalker()
             walker.walk(listener, ctx.body())
 
             try:
@@ -520,8 +573,14 @@ class PseudoInterpreter(PseudoVisitor):
 
             condition = self.visit(ctx.expr())['value']
 
+            self.stack.pop()
+            self.currentFrame = self.stack.peek()
+        
+        self.stack.pop()
+        self.currentFrame = self.stack.peek()
+
     def visitForStatement(self, ctx: PseudoParser.ForStatementContext):
-        newStackFrame = self.currentFrame.normalCopy()
+        newStackFrame = self.currentFrame.copy()
         newStackFrame.returnAddress = self.currentFrame
         self.stack.push(newStackFrame)
         self.currentFrame = self.stack.peek()
@@ -535,6 +594,11 @@ class PseudoInterpreter(PseudoVisitor):
         walker = ParseTreeWalker()
 
         while condition:
+            newStackFrame = self.currentFrame.copy()
+            newStackFrame.returnAddress = self.currentFrame
+            self.stack.push(newStackFrame)
+            self.currentFrame = self.stack.peek()
+
             if not isinstance(condition, bool):
                 throw_wrong_type_exception(ctx.start.line, ctx.start.column, "boolean")
             if ctx.body():
@@ -550,6 +614,9 @@ class PseudoInterpreter(PseudoVisitor):
                         self.visit(ctx.assignmentStatement())
 
             condition = self.visit(ctx.expr())['value'] if ctx.expr() else True
+            
+            self.stack.pop()
+            self.currentFrame = self.stack.peek()
 
         self.stack.pop()
         self.currentFrame = self.stack.peek()
@@ -575,12 +642,12 @@ class PseudoInterpreter(PseudoVisitor):
             for expr_ctx in ctx.argumentList().expr():
                 args.append(self.visit(expr_ctx))
 
-        e = None
         try:
-            newStackFrame = self.currentFrame.geniusCopy()
+            newStackFrame = self.currentFrame.copy()
             newStackFrame.returnAddress = self.currentFrame
+            newStackFrame.isRoot = True
             self.stack.push(newStackFrame)
-            self.currentFrame = self.stack.peek()
+            self.currentFrame = newStackFrame
             self.call_function(name, args, ctx)
 
             if self.functions.get_fun(name)["return_type"] != "void":
@@ -600,7 +667,7 @@ class PseudoInterpreter(PseudoVisitor):
             raise
         finally:
             self.stack.pop()
-            self.currentFrame = self.stack.peek()
+            self.currentFrame = self.currentFrame.returnAddress
 
     def call_function(self, name, args, ctx):
         func = self.functions.get_fun(name)
@@ -626,7 +693,7 @@ class PseudoInterpreter(PseudoVisitor):
             decl_line = ctx.start.line
             if self.currentFrame.localVariables.check_var(var_name):
                 decl_line = func["decl_line"]
-                throw_non_redeclaration_in_function_def(
+                throw_redeclaration_in_function_def_exception(
                     ctx.start.line, ctx.start.column, var_name, decl_line
                 )
             else:
@@ -653,6 +720,20 @@ class PseudoInterpreter(PseudoVisitor):
     def visitBreakStatement(self, ctx):
         raise BreakException("No message")
 
+    def visitCodeBlock(self, ctx):
+        newStackFrame = self.currentFrame.copy()
+        newStackFrame.returnAddress = self.currentFrame
+        self.stack.push(newStackFrame)
+        self.currentFrame = self.stack.peek()
+        
+        listener = Listener(self.currentFrame, self, functions=self.functions)
+        walker = ParseTreeWalker()
+        tree = ctx.body()
+        walker.walk(listener, tree)
+        self.visit(tree)
+
+        self.stack.pop()
+        self.currentFrame = self.stack.peek()
 
 class ReturnException(Exception):
     def __init__(self, value):
@@ -697,12 +778,14 @@ def run_interpreter(inputStream=None):
 
         initialStackFrame = StackFrame(
             globalVariables=Variables(),
+            isRoot=True
         )
 
         functions = Functions()
+        globalVariables = Variables()
 
         interpreter = PseudoInterpreter(
-            initialStackFrame=initialStackFrame, functions=functions
+            initialStackFrame=initialStackFrame, functions=functions, globalVariables=globalVariables
         )
         listener = Listener(initialStackFrame, interpreter, functions=functions)
         walker = ParseTreeWalker()

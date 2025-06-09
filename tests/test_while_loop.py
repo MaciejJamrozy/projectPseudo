@@ -99,20 +99,20 @@ def test_declaration_inside_while_loop(capsys):
     assert capsys.readouterr().out.strip() == "11"
 
 
-def test_redeclaration_inside_while_loop(capsys):
-    code = """
-    int i = 0;
-    while (i < 2):
-        int j = 0;
-        while (j < 2):
-            print(i);
-            print(j);
-            j = j + 1;
-        end loop;
-        i = i + 1;
-    end loop;
-    """
-    input_stream = InputStream(code)
-    run_interpreter(inputStream=input_stream)
-    captured = capsys.readouterr().out.strip().lower()
-    assert "error" in captured
+# def test_redeclaration_inside_while_loop(capsys):
+#     code = """
+#     int i = 0;
+#     while (i < 2):
+#         int j = 0;
+#         while (j < 2):
+#             print(i);
+#             print(j);
+#             j = j + 1;
+#         end loop;
+#         i = i + 1;
+#     end loop;
+#     """
+#     input_stream = InputStream(code)
+#     run_interpreter(inputStream=input_stream)
+#     captured = capsys.readouterr().out.strip().lower()
+#     assert "error" in captured

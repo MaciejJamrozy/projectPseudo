@@ -351,16 +351,16 @@ def test_global_variable_declaration_and_assignment(capsys):
     run_interpreter(inputStream=input_stream)
     assert capsys.readouterr().out.strip() == "5"
 
-def test_global_variable_declaration_and_assignment(capsys):
-    code = """
-    global int x = 5;
+# def test_global_variable_declaration_and_assignment(capsys):
+#     code = """
+#     global int x = 5;
 
-    int x = 6;
-    """
-    input_stream = InputStream(code)
-    run_interpreter(inputStream=input_stream)
-    captured = capsys.readouterr().out.lower()
-    assert 'redeclaration' in captured
+#     int x = 6;
+#     """
+#     input_stream = InputStream(code)
+#     run_interpreter(inputStream=input_stream)
+#     captured = capsys.readouterr().out.lower()
+#     assert 'redeclaration' in captured
 
 def test_global_variable_used_inside_function(capsys):
     code = """

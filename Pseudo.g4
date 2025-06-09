@@ -12,7 +12,9 @@ statement:
 	| returnStatement
 	| breakStatement
 	| continueStatement
-	| varDeclStatement;
+	| varDeclStatement
+	| codeBlock
+	;
 
 printStatement: ('print' | 'shout') '(' expr ')';
 
@@ -70,6 +72,12 @@ param: type = TYPE name = ID;
 functionCallStatement: name = ID '(' args = argumentList? ')';
 
 argumentList: expr (',' expr)*;
+
+codeBlock
+	: '{' body '}'
+	| 'begin' body 'end'
+	| 'block' body 'end'
+	;
 
 body: ((functionDef | statement) ';')*;
 

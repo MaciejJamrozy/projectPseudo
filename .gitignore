@@ -16,4 +16,3 @@ command.txt
 tests/__pycache__/
 tests/.pytest_cache/
 venv/
-

@@ -225,16 +225,55 @@ def test_declaration_inside_while_loop(capsys):
     run_interpreter(inputStream=input_stream)
     assert "undefined" in capsys.readouterr().out.strip()
 
+# Deprecated
+# def test_redeclaration_inside_while_loop(capsys):
+#     code = """
+#     for (int i = 0; i < 2; i++):
+#         int y = 11;
+#         for (int j = 0; j < 2; j++):
+#         end loop;
+#     end loop;
+#     """
+#     input_stream = InputStream(code)
+#     run_interpreter(inputStream=input_stream)
+#     captured = capsys.readouterr().out.strip().lower()
+#     assert "error" in captured
 
-def test_redeclaration_inside_while_loop(capsys):
+def test_proper_var_changing_in_nested_loops_1(capsys):
     code = """
-    for (int i = 0; i < 2; i++):
-        int y = 11;
-        for (int j = 0; j < 2; j++):
-        end loop;
-    end loop;
+    for(int i = 0; i < 4; i++):
+        for(int j = 0; j < i; j= j+2):
+            print(i);
+            print(j);
+            i++;
+        end;
+    end;
     """
     input_stream = InputStream(code)
     run_interpreter(inputStream=input_stream)
-    captured = capsys.readouterr().out.strip().lower()
-    assert "error" in captured
+# 1 wcześniejszy output
+# 0
+# 2
+# 0
+# 3
+# 2
+    captured = capsys.readouterr().out.strip().splitlines()
+    expected = ['1', '0', '3', '0', '4', '2', '5', '4']
+    assert captured == expected
+
+def test_proper_var_changing_in_nested_loops_2(capsys):
+    code = """
+    for(int i = 0; i < 5; i++):
+        for(int j = 0; j < i; j= j+2):
+            print(i);
+            print(j);
+        end;
+        i++;
+    end;
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+
+    captured = capsys.readouterr().out.strip().splitlines()
+    expected = ['2', '0', '4', '0', '4', '2']
+    assert captured == expected

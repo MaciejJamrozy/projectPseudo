@@ -5,8 +5,6 @@ class Variables:
     def set_value(self, var_name, value):
         if var_name in self.__localVariables:
             self.__localVariables[var_name]["value"] = value
-        elif self.parent:
-            self.parent.set_value(var_name, value)
         else:
             raise NameError(f"Variable '{var_name}' not found")
 

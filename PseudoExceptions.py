@@ -28,13 +28,13 @@ def throw_non_defined_function_exception(line, col, fun_name):
     )
 
 
-def throw_non_redeclaration_in_function_def(line, col, name, line_defined):
+def throw_redeclaration_in_function_def_exception(line, col, name, line_defined):
     raise Exception(
-        f"Error in line: {line}, column: {col}: you can't have two arguments ({name}) with the same name, in function definition line: {line_defined}."
+        f"Error in line: {line}, column: {col}: you can't have two arguments with the same name ({name}), in function definition."
     )
 
 
-def throw_function_redeclaration(line, col, name, decl_line):
+def throw_function_redeclaration_exception(line, col, name, decl_line):
     raise Exception(
         f"Error in line: {line}, column: {col}: Redeclaration of function \'{name}\'. It was declared at line {decl_line}."
     )
@@ -48,3 +48,6 @@ def throw_conversion_exception(line, col, type, value):
     raise Exception(
         f"Error in line: {line}, column: {col}: cannot convert {value} to {type}."
     )
+
+def throw_no_parent_scope_exception(line, col):
+    raise Exception(f'Error in line: {line}, column: {col}: there is no superior scope.')
