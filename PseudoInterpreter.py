@@ -8,7 +8,7 @@ from Functions import Functions
 from Variables import Variables
 from Listener import Listener
 from Stack import Stack
-import re
+import sys
 from PseudoExceptions import (
     throw_unsupported_operator_exception,
     throw_undefined_name_exception,
@@ -45,11 +45,13 @@ class PseudoInterpreter(PseudoVisitor):
             else self.currentFrame
         )
 
-        if currentVariablesStoringObject.check_var(
+        if isinstance(currentVariablesStoringObject, Variables) and currentVariablesStoringObject.check_var(
             var_id
         ):  throw_var_redeclaration_exception(
                 ctx.start.line, ctx.start.column, var_id, decl_line
             )
+        elif isinstance(currentVariablesStoringObject, StackFrame) and self.currentFrame.localVariables.check_var(var_id):
+            throw_var_redeclaration_exception(ctx.start.line, ctx.start.column, var_id, decl_line)
 
         currentVariablesStoringObject.set_var(var_id, None, decl_line, var_type)
 
@@ -424,72 +426,81 @@ class PseudoInterpreter(PseudoVisitor):
             return self.visitChildren(ctx)
 
     def visitAssignmentStatement(self, ctx):
-        var_id = ctx.ID().getText()
-        currentVariablesStoringObject = (
-            self.currentFrame
-            if self.currentFrame.check_var(var_id)
-            else self.globalVariables
-        )
-
-        var_type = currentVariablesStoringObject.get_var(var_id)["type"]
-
-        if ctx.op and ctx.op.type == PseudoParser.INCREMENT:
-            val = currentVariablesStoringObject.get_var(var_id)["value"]
-            if isinstance(val, int):
-                currentVariablesStoringObject.set_value(var_id, val + 1)
-            elif isinstance(val, float):
-                currentVariablesStoringObject.set_value(var_id, val + 1.0)
-            else:
-                throw_wrong_type_exception(
-                    ctx.start.line, ctx.start.column, type(val).__name__
-                )
-        elif ctx.op and ctx.op.type == PseudoParser.DECREMENT:
-            val = currentVariablesStoringObject.get_var(var_id)["value"]
-            if isinstance(val, int):
-                currentVariablesStoringObject.set_value(var_id, val - 1)
-            elif isinstance(val, float):
-                currentVariablesStoringObject.set_value(var_id, val - 1.0)
-            else:
-                throw_unknown_operator_exception(
-                    ctx.start.line, ctx.start.column, ctx.op.text
-                )
+        if ctx.parent:
+            if self.currentFrame.isRoot:
+                throw_no_parent_scope_exception(ctx.start.line, ctx.start.column)
+            
+            returnFrame = self.currentFrame
+            self.currentFrame = self.currentFrame.returnAddress
+            self.visit(ctx.assignmentStatement())
+            self.currentFrame = returnFrame
         else:
-            value = self.visit(ctx.expr())
-            if currentVariablesStoringObject.check_var(var_id) is False:
-                throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id)
+            var_id = ctx.ID().getText()
+            currentVariablesStoringObject = (
+                self.currentFrame
+                if self.currentFrame.check_var(var_id)
+                else self.globalVariables
+            )
 
-            try:
-                value_type = value["type"]
+            var_type = currentVariablesStoringObject.get_var(var_id)["type"]
 
-                if var_type == "string":
-                    if value_type != "string":
-                        raise ValueError("Expected string")
-
-                elif var_type == "int":
-                    if value_type == "int":
-                        pass
-                    else:
-                        raise ValueError("Expected int")
-
-                elif var_type == "float":
-                    if value_type == "float":
-                        pass
-                    else:
-                        raise ValueError("Expected float")
-
-                elif var_type == "boolean":
-                    if value_type != "boolean":
-                        raise ValueError("Expected boolean")
-
+            if ctx.op and ctx.op.type == PseudoParser.INCREMENT:
+                val = currentVariablesStoringObject.get_var(var_id)["value"]
+                if isinstance(val, int):
+                    currentVariablesStoringObject.set_value(var_id, val + 1)
+                elif isinstance(val, float):
+                    currentVariablesStoringObject.set_value(var_id, val + 1.0)
                 else:
                     throw_wrong_type_exception(
-                        ctx.start.line, ctx.start.column, var_type
+                        ctx.start.line, ctx.start.column, type(val).__name__
                     )
+            elif ctx.op and ctx.op.type == PseudoParser.DECREMENT:
+                val = currentVariablesStoringObject.get_var(var_id)["value"]
+                if isinstance(val, int):
+                    currentVariablesStoringObject.set_value(var_id, val - 1)
+                elif isinstance(val, float):
+                    currentVariablesStoringObject.set_value(var_id, val - 1.0)
+                else:
+                    throw_unknown_operator_exception(
+                        ctx.start.line, ctx.start.column, ctx.op.text
+                    )
+            else:
+                value = self.visit(ctx.expr())
+                if currentVariablesStoringObject.check_var(var_id) is False:
+                    throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id)
 
-            except Exception:
-                throw_wrong_type_exception(ctx.start.line, ctx.start.column, var_type)
+                try:
+                    value_type = value["type"]
 
-            currentVariablesStoringObject.set_value(var_id, value['value'])
+                    if var_type == "string":
+                        if value_type != "string":
+                            raise ValueError("Expected string")
+
+                    elif var_type == "int":
+                        if value_type == "int":
+                            pass
+                        else:
+                            raise ValueError("Expected int")
+
+                    elif var_type == "float":
+                        if value_type == "float":
+                            pass
+                        else:
+                            raise ValueError("Expected float")
+
+                    elif var_type == "boolean":
+                        if value_type != "boolean":
+                            raise ValueError("Expected boolean")
+
+                    else:
+                        throw_wrong_type_exception(
+                            ctx.start.line, ctx.start.column, var_type
+                        )
+
+                except Exception:
+                    throw_wrong_type_exception(ctx.start.line, ctx.start.column, var_type)
+
+                currentVariablesStoringObject.set_value(var_id, value['value'])
 
     def visitIfStatement(self, ctx: PseudoParser.IfStatementContext):
 
@@ -760,12 +771,12 @@ class BreakException(Exception):
         self.value = value
 
 
-def run_interpreter(inputStream=None):
+def run_interpreter(inputStream=None, filename = "program.pseudo"):
     try:
         inputStream = (
             inputStream
             if inputStream
-            else FileStream("program.pseudo", encoding="utf-8")
+            else FileStream(filename, encoding="utf-8")
         )
         lexer = PseudoLexer(inputStream)
         stream = CommonTokenStream(lexer)
@@ -797,23 +808,9 @@ def run_interpreter(inputStream=None):
         print(e)
         return
 
-
 if __name__ == "__main__":
-    run_interpreter()
-
-# TODO
-# Zrobić porządek w gramatyce - Maciek
-# scope'y - Maciek
-# Zaawansowana diagnostyka błędów
-# Rzutowanie typów - Robert
-# Napisanie dokumentacji - Kacper
-
-# dodatkowe TODO, fajne rzeczy nietrudne do zrobienia:
-# dopracowanie języka: obsługa skróconych operatorów '+=', '-+' '*=' ...
-# dodanie moliwości pisania pętli while bez nawiasów okrągłych "while 1==1: ..."
-# Importy (zeby dało się zrobić: "import anotherProgram.pseudo"
-# Biblioteka standardowa języka, z podstawowymi funkcjami typu: sqrt, time
-# REPL (Read-Eval-Print Loop) - bardzo ciekawa rzecz ale nie wiem jak trudna - Interaktywny tryb działania interpretera – użytkownik wpisuje linijki kodu i otrzymuje natychmiastowy wynik.
-
-# trudne (ale fajne), dodatkowe TODO:
-# Listy / tablice: z operacjami indeksowania, długości, dodawania/uzupełniania.
+    if len(sys.argv) != 2:
+            print("Usage: python3 pseudoInterpreter.py <filename>")
+            sys.exit(1)
+    filename = sys.argv[1]
+    run_interpreter(filename=filename)

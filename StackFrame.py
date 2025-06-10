@@ -38,8 +38,3 @@ class StackFrame:
     
     def set_var(self, var_name, value, decl_line=None, type=None):
         self.localVariables.set_var(var_name, value, decl_line, type)
-
-    # def normalCopy(self):
-    #     newStackFrame = StackFrame(globalVariables=self.globalVariables)
-    #     newStackFrame.localVariables = copy.deepcopy(self.localVariables)
-    #     return newStackFrame

@@ -18,13 +18,11 @@ statement:
 
 printStatement: ('print' | 'shout') '(' expr ')';
 
-assignmentStatement: (global = 'global')? ID op = (
-		'='
-		| 'is'
-		| '<<'
-		| '<-'
-	) expr
-	| (global = 'global')? ID op = ('++' | '--');
+assignmentStatement
+	: id = ID op = ('='| 'is'| '<<'| '<-') expr
+	| id = ID op = ('++' | '--')
+	| parent = PARENT assignmentStatement
+	;
 
 ifStatement:
 	'if' ('(' expr ')' | expr) (':' | 'then') body (
@@ -79,7 +77,7 @@ codeBlock
 	| 'block' body 'end'
 	;
 
-body: ((functionDef | statement) ';')*;
+body: ((functionDef | statement | expr) ';')*;
 
 varDeclStatement:
 	(global = 'global')? TYPE ID (
