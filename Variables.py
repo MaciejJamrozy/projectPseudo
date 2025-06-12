@@ -30,3 +30,6 @@ class Variables:
     def del_var(self, var_name):
         if var_name in self.__localVariables:
             self.__localVariables.pop(var_name)
+
+    def get_all_names(self):
+        return self.__localVariables.keys()

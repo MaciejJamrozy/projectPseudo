@@ -111,7 +111,7 @@ def test_function_string_arg(capsys):
     assert captured == "Hello Alice"
 
 
-def test_indirect_recursion(capsys):
+def test_indirect_recursion_1(capsys):
     code = """
     function is_even(int n) -> boolean:
         if n == 0:
@@ -137,6 +137,32 @@ def test_indirect_recursion(capsys):
 
     captured = capsys.readouterr().out.strip().splitlines()
     assert captured == ["True", "True"]
+    
+def test_indirect_recursion_2(capsys):
+    code = """
+    function void a(int n):
+        if (n > 0):
+            print(n);
+            b(n - 1);
+        end;
+    end;
+
+    function void b(int n):
+        if (n > 0):
+            print(n);
+            a(n - 1);
+        end;
+    end;
+
+    a(4);
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+
+    captured = capsys.readouterr().out.strip().splitlines()
+    expected = ["4", "3", "2", "1"]
+    assert captured == expected
+
 
 
 def test_function_with_multiple_params_and_return(capsys):

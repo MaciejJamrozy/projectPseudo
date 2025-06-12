@@ -6,7 +6,6 @@ from PseudoLexer import PseudoLexer
 from StackFrame import StackFrame
 from Functions import Functions
 from Variables import Variables
-from Listener import Listener
 from Stack import Stack
 import sys
 from PseudoExceptions import (
@@ -19,7 +18,9 @@ from PseudoExceptions import (
     throw_conversion_exception,
     throw_var_redeclaration_exception,
     throw_no_parent_scope_exception,
-    throw_wrong_parameters_number_exception
+    throw_wrong_parameters_number_exception,
+    throw_fun_def_in_block_exception,
+    throw_function_redeclaration_exception
 )
 
 class PseudoInterpreter(PseudoVisitor):
@@ -108,7 +109,8 @@ class PseudoInterpreter(PseudoVisitor):
                 var_dict = self.globalVariables.get_var(var_id)
                 return {"type": var_dict['type'], "value": var_dict['value']}
             else:
-                throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id)
+                known_names = self.currentFrame.get_all_identifiers()
+                throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id, known_names)
 
         elif ctx.op and ctx.op.type == PseudoParser.PARENT:
             if self.currentFrame.isRoot:
@@ -477,7 +479,8 @@ class PseudoInterpreter(PseudoVisitor):
                     value = self.visit(ctx.expr())
 
                 if currentVariablesStoringObject.check_var(var_id) is False:
-                    throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id)
+                    known_names = self.currentFrame.get_all_identifiers()
+                    throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id, known_names)
 
                 try:
                     value_type = value["type"]
@@ -581,10 +584,6 @@ class PseudoInterpreter(PseudoVisitor):
             self.stack.push(newStackFrame)
             self.currentFrame = self.stack.peek()
             
-            listener = Listener(self.currentFrame, self, functions=self.functions)
-            walker = ParseTreeWalker()
-            walker.walk(listener, ctx.body())
-
             try:
                 self.visit(ctx.body())
             except ContinueException:
@@ -611,9 +610,6 @@ class PseudoInterpreter(PseudoVisitor):
 
         condition = self.visit(ctx.expr())['value'] if ctx.expr() else True
 
-        listener = Listener(self.currentFrame, self, functions=self.functions)
-        walker = ParseTreeWalker()
-
         while condition:
             newStackFrame = self.currentFrame.copy()
             newStackFrame.returnAddress = self.currentFrame
@@ -623,7 +619,6 @@ class PseudoInterpreter(PseudoVisitor):
             if not isinstance(condition, bool):
                 throw_wrong_type_exception(ctx.start.line, ctx.start.column, "boolean")
             if ctx.body():
-                walker.walk(listener, ctx.body())
                 try:
                     self.visit(ctx.body())
                 except ContinueException:
@@ -722,10 +717,7 @@ class PseudoInterpreter(PseudoVisitor):
                     var_name, arg['value'], decl_line, var_type
                 )
 
-        listener = Listener(self.currentFrame, self, functions=self.functions)
-        walker = ParseTreeWalker()
         tree = func["body"]
-        walker.walk(listener, tree)
         self.visit(tree)
 
     def visitReturnStatement(self, ctx):
@@ -733,7 +725,33 @@ class PseudoInterpreter(PseudoVisitor):
         raise ReturnException(value)
 
     def visitFunctionDef(self, ctx):
-        return None
+        if not self.currentFrame.isRoot:
+            throw_fun_def_in_block_exception(ctx.start.line, ctx.start.column)
+        
+        name = ctx.name.text
+        return_type = ctx.type_.text
+        body = ctx.block
+
+        if self.functions.check_fun(name):
+            decl_line = self.functions.get_fun(name)["decl_line"]
+            throw_function_redeclaration_exception(ctx.start.line, ctx.start.column, name, decl_line)
+
+        params = {}
+        if ctx.paramList():
+            for param_ctx in ctx.paramList().param():
+                param_type = param_ctx.TYPE().getText()
+                param_name = param_ctx.ID().getText()
+                if param_name in params.keys():
+                    column = param_ctx.ID().getSymbol().column
+                    throw_redeclaration_in_function_def_exception(
+                        ctx.start.line, column, param_name, ctx.start.line
+                    )
+                else:
+                    params[param_name] = param_type
+
+        self.functions.set_fun(
+            name, return_type, params, body, ctx.start.line
+        )
 
     def visitContinueStatement(self, ctx):
         raise ContinueException("No message")
@@ -747,11 +765,7 @@ class PseudoInterpreter(PseudoVisitor):
         self.stack.push(newStackFrame)
         self.currentFrame = self.stack.peek()
         
-        listener = Listener(self.currentFrame, self, functions=self.functions)
-        walker = ParseTreeWalker()
-        tree = ctx.body()
-        walker.walk(listener, tree)
-        self.visit(tree)
+        self.visit(ctx.body())
 
         self.stack.pop()
         self.currentFrame = self.stack.peek()
@@ -808,9 +822,6 @@ def run_interpreter(inputStream=None, filename = "program.pseudo"):
         interpreter = PseudoInterpreter(
             initialStackFrame=initialStackFrame, functions=functions, globalVariables=globalVariables
         )
-        listener = Listener(initialStackFrame, interpreter, functions=functions)
-        walker = ParseTreeWalker()
-        walker.walk(listener, tree)
 
         interpreter.visit(tree)
 

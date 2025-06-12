@@ -1,3 +1,5 @@
+import difflib
+
 def throw_unsupported_operator_exception(line, col, op, type1, type2):
     raise Exception(
         f"Error in line: {line}, column: {col}: you can't use '{op}' operator between {type1} and {type2}."
@@ -10,10 +12,13 @@ def throw_var_redeclaration_exception(line, col, var_name, decl_line):
     )
 
 
-def throw_undefined_name_exception(line, col, var_name):
-    raise Exception(
-        f"Error in line: {line}, column: {col}: undefined name '{var_name}'."
-    )
+def throw_undefined_name_exception(line, col, var_name, known_names):
+    suggestion = difflib.get_close_matches(var_name, known_names, n=1, cutoff=0.25)
+    if suggestion:
+        msg = f"Error in line: {line}, column: {col}: undefined name '{var_name}'. Did you mean '{suggestion[0]}'?"
+    else:
+        msg = f"Error in line: {line}, column: {col}: undefined name '{var_name}'."
+    raise Exception(msg)
 
 
 def throw_wrong_type_exception(line, col, var_type):
@@ -60,12 +65,4 @@ def throw_wrong_parameters_number_exception(line, col, fun_name, given, take):
 
 
 def throw_fun_def_in_block_exception(line, col):
-    raise Exception(f'Error in line: {line}, column: {col}: functions cannot be declared inside any blocks.')
-
-
-def throw_fun_def_in_if_else_block_exception(line, col):
-    raise Exception(f'Error in line: {line}, column: {col}: functions cannot be declared inside if-else blocks.')
-
-
-def throw_fun_def_in_loop_exception(line, col):
-    raise Exception(f'Error in line: {line}, column: {col}: functions cannot be declared inside any loops.')
+    raise Exception(f'Error in line: {line}, column: {col}: functions cannot be declared inside blocks, if-else blocks or loops.')

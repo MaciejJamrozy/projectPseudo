@@ -38,3 +38,9 @@ class StackFrame:
     
     def set_var(self, var_name, value, decl_line=None, type=None):
         self.localVariables.set_var(var_name, value, decl_line, type)
+
+    def get_all_identifiers(self):
+        if self.isRoot:
+            return set(self.localVariables.get_all_names()).union(set(self.globalVariables.get_all_names()))
+        else:
+            return set(self.localVariables.get_all_names()).union(self.returnAddress.get_all_identifiers())
