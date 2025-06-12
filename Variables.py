@@ -31,5 +31,5 @@ class Variables:
         if var_name in self.__localVariables:
             self.__localVariables.pop(var_name)
 
-    def get_all_names(self):
-        return self.__localVariables.keys()
+    def get_all_names(self) -> set:
+        return set(self.__localVariables.keys())

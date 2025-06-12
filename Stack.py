@@ -10,7 +10,7 @@ class Stack(Generic[T]):
     def push(self, item: T) -> None:
         self._items.append(item)
         self.depth += 1
-        if self.depth > 19:
+        if self.depth > 30:
             raise Exception("Error: Stack overflow!")
 
     def pop(self) -> T:

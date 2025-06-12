@@ -12,7 +12,7 @@ def throw_var_redeclaration_exception(line, col, var_name, decl_line):
     )
 
 
-def throw_undefined_name_exception(line, col, var_name, known_names):
+def throw_undefined_name_exception(line, col, var_name, known_names=set()):
     suggestion = difflib.get_close_matches(var_name, known_names, n=1, cutoff=0.25)
     if suggestion:
         msg = f"Error in line: {line}, column: {col}: undefined name '{var_name}'. Did you mean '{suggestion[0]}'?"

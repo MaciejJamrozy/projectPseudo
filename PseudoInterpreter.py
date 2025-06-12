@@ -479,7 +479,7 @@ class PseudoInterpreter(PseudoVisitor):
                     value = self.visit(ctx.expr())
 
                 if currentVariablesStoringObject.check_var(var_id) is False:
-                    known_names = self.currentFrame.get_all_identifiers()
+                    known_names = self.currentFrame.get_all_identifiers().union(self.globalVariables.get_all_names())
                     throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id, known_names)
 
                 try:
@@ -519,8 +519,7 @@ class PseudoInterpreter(PseudoVisitor):
 
         returnAddress = self.currentFrame
         if self.visit(ctx.expr(0))['value']:
-            newStackFrame = self.currentFrame.copy()
-            newStackFrame.returnAddress = returnAddress
+            newStackFrame = StackFrame(returnAddress=returnAddress)
             self.stack.push(newStackFrame)
             self.currentFrame = self.stack.peek()
 
@@ -538,8 +537,7 @@ class PseudoInterpreter(PseudoVisitor):
         for i in range(num_elseif):
 
             if self.visit(ctx.expr(i + 1))['value']:
-                newStackFrame = self.currentFrame.copy()
-                newStackFrame.returnAddress = returnAddress
+                newStackFrame = StackFrame(returnAddress=returnAddress)
                 self.stack.push(newStackFrame)
                 self.currentFrame = self.stack.peek()
 
@@ -554,8 +552,7 @@ class PseudoInterpreter(PseudoVisitor):
                 return
 
         if ctx.body(num_elseif + 1) is not None:
-            newStackFrame = self.currentFrame.copy()
-            newStackFrame.returnAddress = returnAddress
+            newStackFrame = StackFrame(returnAddress=self.currentFrame)
             self.stack.push(newStackFrame)
             self.currentFrame = self.stack.peek()
 
@@ -569,8 +566,7 @@ class PseudoInterpreter(PseudoVisitor):
                 self.currentFrame = self.stack.peek()
 
     def visitWhileStatement(self, ctx: PseudoParser.WhileStatementContext):
-        newStackFrame = self.currentFrame.copy()
-        newStackFrame.returnAddress = self.currentFrame
+        newStackFrame = StackFrame(returnAddress=self.currentFrame)
         self.stack.push(newStackFrame)
         self.currentFrame = self.stack.peek()
 
@@ -579,8 +575,7 @@ class PseudoInterpreter(PseudoVisitor):
             throw_wrong_type_exception(ctx.start.line, ctx.start.column, "boolean")
 
         while condition:
-            newStackFrame = self.currentFrame.copy()
-            newStackFrame.returnAddress = self.currentFrame
+            newStackFrame = StackFrame(returnAddress=self.currentFrame)
             self.stack.push(newStackFrame)
             self.currentFrame = self.stack.peek()
             
@@ -600,8 +595,7 @@ class PseudoInterpreter(PseudoVisitor):
         self.currentFrame = self.stack.peek()
 
     def visitForStatement(self, ctx: PseudoParser.ForStatementContext):
-        newStackFrame = self.currentFrame.copy()
-        newStackFrame.returnAddress = self.currentFrame
+        newStackFrame = StackFrame(returnAddress=self.currentFrame)
         self.stack.push(newStackFrame)
         self.currentFrame = self.stack.peek()
 
@@ -611,8 +605,7 @@ class PseudoInterpreter(PseudoVisitor):
         condition = self.visit(ctx.expr())['value'] if ctx.expr() else True
 
         while condition:
-            newStackFrame = self.currentFrame.copy()
-            newStackFrame.returnAddress = self.currentFrame
+            newStackFrame = StackFrame(returnAddress=self.currentFrame)
             self.stack.push(newStackFrame)
             self.currentFrame = self.stack.peek()
 
@@ -659,8 +652,7 @@ class PseudoInterpreter(PseudoVisitor):
                 args.append(self.visit(expr_ctx))
 
         try:
-            newStackFrame = self.currentFrame.copy()
-            newStackFrame.returnAddress = self.currentFrame
+            newStackFrame = StackFrame(returnAddress=self.currentFrame)
             newStackFrame.isRoot = True
             self.stack.push(newStackFrame)
             self.currentFrame = newStackFrame
@@ -760,8 +752,7 @@ class PseudoInterpreter(PseudoVisitor):
         raise BreakException("No message")
 
     def visitCodeBlock(self, ctx):
-        newStackFrame = self.currentFrame.copy()
-        newStackFrame.returnAddress = self.currentFrame
+        newStackFrame = StackFrame(returnAddress=self.currentFrame)
         self.stack.push(newStackFrame)
         self.currentFrame = self.stack.peek()
         
@@ -812,7 +803,6 @@ def run_interpreter(inputStream=None, filename = "program.pseudo"):
         tree = parser.program()
 
         initialStackFrame = StackFrame(
-            globalVariables=Variables(),
             isRoot=True
         )
 

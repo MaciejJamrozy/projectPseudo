@@ -323,7 +323,7 @@ def test_stack_overflow(capsys):
         end if;
     end function;
 
-    factorial(25);
+    factorial(40);
     """
     input_stream = InputStream(code)
     run_interpreter(inputStream=input_stream)

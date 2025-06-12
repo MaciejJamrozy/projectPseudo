@@ -4,15 +4,10 @@ from PseudoExceptions import (
     )
 
 class StackFrame:
-    def __init__(self, globalVariables: Variables = None, returnAddress = None, isRoot = False):
+    def __init__(self, returnAddress = None, isRoot = False):
         self.localVariables = Variables()
-        self.globalVariables = globalVariables
         self.returnAddress: StackFrame = returnAddress
         self.isRoot = isRoot
-
-    def copy(self):
-        newStackFrame = StackFrame(globalVariables=self.globalVariables)
-        return newStackFrame
     
     def check_var(self, var_id):
         if self.localVariables.check_var(var_id):
@@ -41,6 +36,6 @@ class StackFrame:
 
     def get_all_identifiers(self):
         if self.isRoot:
-            return set(self.localVariables.get_all_names()).union(set(self.globalVariables.get_all_names()))
+            return self.localVariables.get_all_names()
         else:
-            return set(self.localVariables.get_all_names()).union(self.returnAddress.get_all_identifiers())
+            return self.localVariables.get_all_names().union(self.returnAddress.get_all_identifiers())
