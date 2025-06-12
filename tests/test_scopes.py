@@ -13,7 +13,7 @@ def test_proper_var_decl_order(capsys):
         { //     { | BEGIN | BLOCK
             int y = 10;  // nowy wewnętrzny scope
             print(x + y); // x z zewnętrznego scope’u też dostępne
-        };
+        }
         print(y);  // y już niewidoczne
     end; //     } | END | END BLOCK
     foo();
@@ -29,7 +29,7 @@ def test_outer_variable_visible_in_inner_block(capsys):
     int x = 5;
     {
         print(x);
-    };
+    }
     """
     run_interpreter(InputStream(code))
     assert capsys.readouterr().out.strip() == "5"
@@ -39,7 +39,7 @@ def test_modify_outer_variable_in_inner_block(capsys):
     int x = 5;
     {
         x = 10;
-    };
+    }
     print(x);
     """
     run_interpreter(InputStream(code))
@@ -51,7 +51,7 @@ def test_variable_shadowing(capsys):
     {
         int x = 2;
         print(x);
-    };
+    }
     print(x);
     """
     run_interpreter(InputStream(code))
@@ -65,8 +65,8 @@ def test_nested_blocks(capsys):
         int b = 1;
         {
             a = a + b;
-        };
-    };
+        }
+    }
     print(a);
     """
     run_interpreter(InputStream(code))
@@ -79,9 +79,9 @@ def test_nested_blocks_assignments(capsys):
         {
             int y = x + 5;
             print(y);
-        };
+        }
         print(x);
-    };
+    }
     """
     input_stream = InputStream(code)
     run_interpreter(inputStream=input_stream)
@@ -93,9 +93,9 @@ def test_modify_outer_variable(capsys):
         int x = 1;
         {
             x = x + 9;
-        };
+        }
         print(x);
-    };
+    }
     """
     input_stream = InputStream(code)
     run_interpreter(inputStream=input_stream)
@@ -108,9 +108,9 @@ def test_shadow_variable(capsys):
         {
             int x = 20;
             print(x);
-        };
+        }
         print(x);
-    };
+    }
     """
     input_stream = InputStream(code)
     run_interpreter(inputStream=input_stream)
@@ -123,9 +123,9 @@ def test_access_global_inside_nested_blocks(capsys):
         {
             {
                 print(g);
-            };
-        };
-    };
+            }
+        }
+    }
     """
     input_stream = InputStream(code)
     run_interpreter(inputStream=input_stream)
@@ -133,17 +133,17 @@ def test_access_global_inside_nested_blocks(capsys):
 
 def test_weird_block_usages(capsys):
     code = """
-    {};
+    {}
     {
         int x = 1;
-        {};
+        {}
         {
             x = 2;
             {
                 print(x);
-            };
-        };
-    };
+            }
+        }
+    }
     """
     input_stream = InputStream(code)
     run_interpreter(inputStream=input_stream)
@@ -157,8 +157,8 @@ def test_access_shadowed_variable_with_parent_scope(capsys):
             int a = 10;
             print(a);          // should print 10
             print(parent::a);  // should print 5
-        };
-    };
+        }
+    }
     """
     input_stream = InputStream(code)
     run_interpreter(inputStream=input_stream)
@@ -170,9 +170,9 @@ def test_modify_parent_variable(capsys):
         int a = 1;
         {
             parent::a = 9;
-        };
+        }
         print(a); // should print 9
-    };
+    }
     """
     input_stream = InputStream(code)
     run_interpreter(inputStream=input_stream)
@@ -184,8 +184,8 @@ def test_parent_reference_without_shadowing(capsys):
         int a = 42;
         {
             print(parent::a);  // should still print 42
-        };
-    };
+        }
+    }
     """
     input_stream = InputStream(code)
     run_interpreter(inputStream=input_stream)
@@ -196,8 +196,8 @@ def test_invalid_parent_reference_should_fail(capsys):
     {
         {
             print(parent::a);  // 'a' doesn't exist in parent scope
-        };
-    };
+        }
+    }
     """
     input_stream = InputStream(code)
     run_interpreter(inputStream=input_stream)
@@ -212,10 +212,48 @@ def test_multiple_nested_parents(capsys):
             {
                 print(a);          // 50
                 print(parent::parent::a);  // 100
-            };
-        };
-    };
+            }
+        }
+    }
     """
     input_stream = InputStream(code)
     run_interpreter(inputStream=input_stream)
     assert capsys.readouterr().out.strip().splitlines() == ["50", "100"]
+
+
+def test_multiple_nested_parents_modified_1(capsys):
+    code = """
+    {
+        int a = 1;
+        int b = 3;
+        {
+            {
+                int b = 100;
+                parent::parent::a = b + 9;
+                print(parent::parent::a);
+            }
+        }
+    }
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+    assert capsys.readouterr().out.strip() == '109'
+
+
+def test_multiple_nested_parents_modified_2(capsys):
+    code = """
+    {
+        int a = 1;
+        int b = 3;
+        {
+            {
+                int b = 100;
+                parent::parent::a = parent::parent::b + 9;
+                print(parent::parent::a);
+            }
+        }
+    }
+    """
+    input_stream = InputStream(code)
+    run_interpreter(inputStream=input_stream)
+    assert capsys.readouterr().out.strip() == '12'

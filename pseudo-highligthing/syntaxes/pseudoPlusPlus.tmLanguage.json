@@ -8,12 +8,12 @@
 		"match": "(//).*$"
 		},
 		{
-			"name": "keyword.control.pseudo",
-			"match": "\\b(print|shout|if|else|elseif|while|for|function|end|then|not|and|or|input|scan|listen)\\b"
+		"name": "keyword.control.pseudo",
+		"match": "\\b(print|shout|if|else|elseif|while|for|function|fun|def|end|then|not|and|or|input|scan|listen)\\b"
 		},
 		{
 		"name": "storage.type.pseudo",
-		"match": "\\b(int|float|string|boolean)\\b"
+		"match": "\\b(int|float|string|boolean|void)\\b"
 		},
 		{
 		"name": "constant.language.boolean.pseudo",
@@ -33,7 +33,7 @@
 		},
 		{
 		"name": "keyword.operator.pseudo",
-		"match": "(\\+|\\-|\\*|\\/|=|==|!=|<|>|&&|\\|\\|)"
+		"match": "(\\+|\\-|\\*|\\/|=|==|!=|<|>|&&|\\|\\|parent::|\\#)"
 		},
 		{
 		"name": "variable.other.pseudo",

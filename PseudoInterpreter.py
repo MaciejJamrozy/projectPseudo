@@ -18,9 +18,9 @@ from PseudoExceptions import (
     throw_unknown_operator_exception,
     throw_conversion_exception,
     throw_var_redeclaration_exception,
-    throw_no_parent_scope_exception
+    throw_no_parent_scope_exception,
+    throw_wrong_parameters_number_exception
 )
-
 
 class PseudoInterpreter(PseudoVisitor):
     def __init__(self, initialStackFrame: StackFrame, functions: Functions = None, globalVariables = None):
@@ -425,14 +425,16 @@ class PseudoInterpreter(PseudoVisitor):
         else:
             return self.visitChildren(ctx)
 
-    def visitAssignmentStatement(self, ctx):
+    def visitAssignmentStatement(self, ctx, jump=None):
         if ctx.parent:
             if self.currentFrame.isRoot:
                 throw_no_parent_scope_exception(ctx.start.line, ctx.start.column)
-            
+
+            jump = self.currentFrame if jump is None else jump
+
             returnFrame = self.currentFrame
             self.currentFrame = self.currentFrame.returnAddress
-            self.visit(ctx.assignmentStatement())
+            self.visitAssignmentStatement(ctx.assignmentStatement(), jump=jump)
             self.currentFrame = returnFrame
         else:
             var_id = ctx.ID().getText()
@@ -465,7 +467,15 @@ class PseudoInterpreter(PseudoVisitor):
                         ctx.start.line, ctx.start.column, ctx.op.text
                     )
             else:
-                value = self.visit(ctx.expr())
+                value = None
+                if jump:
+                    returnAddress = self.currentFrame
+                    self.currentFrame = jump
+                    value = self.visit(ctx.expr())
+                    self.currentFrame = returnAddress
+                else:
+                    value = self.visit(ctx.expr())
+
                 if currentVariablesStoringObject.check_var(var_id) is False:
                     throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id)
 
@@ -692,7 +702,7 @@ class PseudoInterpreter(PseudoVisitor):
         }
 
         if len(args) != len(func["params"]):
-            raise Exception("Error: Wrong parameters number!")
+            throw_wrong_parameters_number_exception(ctx.start.line, ctx.start.column, name, len(args), len(func["params"]))
 
         for param, arg in zip(func["params"], args):
 

@@ -51,3 +51,21 @@ def throw_conversion_exception(line, col, type, value):
 
 def throw_no_parent_scope_exception(line, col):
     raise Exception(f'Error in line: {line}, column: {col}: there is no superior scope.')
+
+
+def throw_wrong_parameters_number_exception(line, col, fun_name, given, take):
+    take_tailored_string = 'parameter' if take == 1 else 'parameters'
+    given_tailored_string = 'was' if given == 1 else 'were'
+    raise Exception(f'Error in line: {line}, column: {col}: function \'{fun_name}\' takes {take} {take_tailored_string}, but {given} {given_tailored_string} given.')
+
+
+def throw_fun_def_in_block_exception(line, col):
+    raise Exception(f'Error in line: {line}, column: {col}: functions cannot be declared inside any blocks.')
+
+
+def throw_fun_def_in_if_else_block_exception(line, col):
+    raise Exception(f'Error in line: {line}, column: {col}: functions cannot be declared inside if-else blocks.')
+
+
+def throw_fun_def_in_loop_exception(line, col):
+    raise Exception(f'Error in line: {line}, column: {col}: functions cannot be declared inside any loops.')

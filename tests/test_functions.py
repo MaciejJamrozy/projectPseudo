@@ -74,7 +74,7 @@ def test_function_wrong_arg_count(capsys):
     run_interpreter(inputStream=input_stream)
 
     captured = capsys.readouterr().out.lower()
-    assert "wrong" in captured.lower()
+    assert "error" in captured.lower()
 
 
 def test_recursive_function(capsys):

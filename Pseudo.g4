@@ -1,6 +1,6 @@
 grammar Pseudo;
 
-program: ((functionDef | statement) ';')* EOF;
+program: (((functionDef | statement) ';') | (codeBlock))* EOF;
 
 statement:
 	printStatement
@@ -13,7 +13,6 @@ statement:
 	| breakStatement
 	| continueStatement
 	| varDeclStatement
-	| codeBlock
 	;
 
 printStatement: ('print' | 'shout') '(' expr ')';
@@ -42,24 +41,15 @@ breakStatement: 'break' ('loop')? | 'exit' ('loop')?;
 
 continueStatement: 'continue' ('loop')? | 'next' ('loop')?;
 
-functionDef:
-	'function' type = TYPE name = ID '(' params = paramList? ')' ':' block = body 'end' (
-		'function'
-	)?
-	| 'fun' type = TYPE name = ID '(' params = paramList? ')' ':' block = body 'end' (
-		'fun'
-	)?
-	| 'def' type = TYPE name = ID '(' params = paramList? ')' ':' block = body 'end' (
-		'def'
-	)?
-	| 'function' name = ID '(' params = paramList? ')' '->' type = TYPE ':' block = body 'end' (
-		'function'
-	)?
-	| 'fun' name = ID '(' params = paramList? ')' '->' type = TYPE ':' block = body ';'
-	| 'end' ('fun')?
-	| 'def' name = ID '(' params = paramList? ')' '->' type = TYPE ':' block = body ';' 'end' (
-		'def'
-	)?;
+functionDef
+	: 'function' type = TYPE name = ID '(' params = paramList? ')' ':' block = body 'end' ('function')?
+	| 'fun' type = TYPE name = ID '(' params = paramList? ')' ':' block = body 'end' ('fun')?
+	| 'def' type = TYPE name = ID '(' params = paramList? ')' ':' block = body 'end' ('def')?
+
+	| 'function' name = ID '(' params = paramList? ')' '->' type = TYPE ':' block = body 'end' ('function')?
+	| 'fun' name = ID '(' params = paramList? ')' '->' type = TYPE ':' block = body 'end' ('fun')?
+	| 'def' name = ID '(' params = paramList? ')' '->' type = TYPE ':' block = body 'end' ('def')?
+	;
 
 returnStatement: 'return' val = expr;
 
@@ -77,7 +67,7 @@ codeBlock
 	| 'block' body 'end'
 	;
 
-body: ((functionDef | statement | expr) ';')*;
+body: (((functionDef | statement | expr) ';') | (codeBlock))*;
 
 varDeclStatement:
 	(global = 'global')? TYPE ID (
