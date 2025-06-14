@@ -7,22 +7,11 @@ from StackFrame import StackFrame
 from Functions import Functions
 from Variables import Variables
 from Stack import Stack
+import config
 import sys
-from PseudoExceptions import (
-    throw_unsupported_operator_exception,
-    throw_undefined_name_exception,
-    throw_wrong_type_exception,
-    throw_non_defined_function_exception,
-    throw_redeclaration_in_function_def_exception,
-    throw_unknown_operator_exception,
-    throw_conversion_exception,
-    throw_var_redeclaration_exception,
-    throw_no_parent_scope_exception,
-    throw_wrong_parameters_number_exception,
-    throw_fun_def_in_block_exception,
-    throw_function_redeclaration_exception
-)
+from PseudoExceptions import *
 
+source_file = None
 class PseudoInterpreter(PseudoVisitor):
     def __init__(self, initialStackFrame: StackFrame, functions: Functions = None, globalVariables = None):
         self.inFunctionCall = False
@@ -46,12 +35,13 @@ class PseudoInterpreter(PseudoVisitor):
             else self.currentFrame
         )
 
-        if isinstance(currentVariablesStoringObject, Variables) and currentVariablesStoringObject.check_var(
-            var_id
-        ):  throw_var_redeclaration_exception(
+        if isinstance(currentVariablesStoringObject, Variables) and currentVariablesStoringObject.check_var(var_id):
+            decl_line = currentVariablesStoringObject.get_var(var_id)['decl_line']
+            throw_var_redeclaration_exception(
                 ctx.start.line, ctx.start.column, var_id, decl_line
             )
         elif isinstance(currentVariablesStoringObject, StackFrame) and self.currentFrame.localVariables.check_var(var_id):
+            decl_line = self.currentFrame.localVariables.get_var(var_id)['decl_line']
             throw_var_redeclaration_exception(ctx.start.line, ctx.start.column, var_id, decl_line)
 
         currentVariablesStoringObject.set_var(var_id, None, decl_line, var_type)
@@ -113,7 +103,7 @@ class PseudoInterpreter(PseudoVisitor):
                 throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id, known_names)
 
         elif ctx.op and ctx.op.type == PseudoParser.PARENT:
-            if self.currentFrame.isRoot:
+            if self.currentFrame.returnAddress is None:
                 throw_no_parent_scope_exception(ctx.start.line, ctx.start.column)
             
             returnFrame = self.currentFrame
@@ -157,7 +147,7 @@ class PseudoInterpreter(PseudoVisitor):
                         ctx.start.line,
                         ctx.start.column,
                         parse_type,
-                        value
+                        value,
                     )
 
         elif ctx.op and ctx.op.type == PseudoParser.PLUS:
@@ -181,6 +171,7 @@ class PseudoInterpreter(PseudoVisitor):
                         ctx.op.text,
                         type(left_value).__name__,
                         type(right_value).__name__,
+                        source_file
                     )
 
         elif ctx.op and ctx.op.type == PseudoParser.MINUS:
@@ -208,6 +199,7 @@ class PseudoInterpreter(PseudoVisitor):
                         ctx.op.text,
                         type(left_value).__name__,
                         type(right_value).__name__,
+                        source_file
                     )
 
             else:
@@ -218,6 +210,7 @@ class PseudoInterpreter(PseudoVisitor):
                         ctx.op.text,
                         type(left_value).__name__,
                         "int/float",
+                        source_file
                     )
                 
                 type = None
@@ -248,15 +241,20 @@ class PseudoInterpreter(PseudoVisitor):
                     ctx.op.text,
                     type(left_value).__name__,
                     type(right_value).__name__,
+                    source_file
                 )
 
         elif ctx.op and ctx.op.type == PseudoParser.DIV:
-            left_value = self.visit(ctx.expr(0))['value']
-            right_value = self.visit(ctx.expr(1))['value']
-
+            left_expr_ctx = ctx.expr(0)
+            left_value = self.visit(left_expr_ctx)['value']
+            
+            right_expr_ctx = ctx.expr(1)
+            right_value = self.visit(right_expr_ctx)['value']
+            
             if not (isinstance(left_value, str) or isinstance(right_value, str)):
                 if abs(right_value) < 1e-9:
-                    raise Exception("Cannot divide by zero")
+                    right_column = right_expr_ctx.start.column
+                    throw_dividing_by_zero_exception(ctx.start.line, right_column)
                
                 value = left_value / right_value
                 type = None
@@ -274,15 +272,20 @@ class PseudoInterpreter(PseudoVisitor):
                     ctx.op.text,
                     type(left_value).__name__,
                     type(right_value).__name__,
+                    source_file
                 )
 
         elif ctx.op and ctx.op.type == PseudoParser.INTDIV:
-            left_value = self.visit(ctx.expr(0))['value']
-            right_value = self.visit(ctx.expr(1))['value']
+            left_expr_ctx = ctx.expr(0)
+            left_value = self.visit(left_expr_ctx)['value']
+            
+            right_expr_ctx = ctx.expr(1)
+            right_value = self.visit(right_expr_ctx)['value']
 
             if not (isinstance(left_value, str) or isinstance(right_value, str)):
                 if abs(right_value) < 1e-9:
-                    raise Exception("Cannot divide by zero")
+                    right_column = right_expr_ctx.start.column
+                    throw_dividing_by_zero_exception(ctx.start.line, right_column)
                 value = left_value // right_value
                 return {"type": 'int', "value": value}
             
@@ -293,6 +296,7 @@ class PseudoInterpreter(PseudoVisitor):
                     ctx.op.text,
                     type(left_value).__name__,
                     type(right_value).__name__,
+                    source_file
                 )
 
         elif ctx.op and ctx.op.type == PseudoParser.AND:
@@ -307,6 +311,7 @@ class PseudoInterpreter(PseudoVisitor):
                     ctx.start.column,
                     ctx.op.text,
                     type(left_value.__name__, type(right_value).__name__),
+                    source_file
                 )
 
         elif ctx.op and ctx.op.type == PseudoParser.OR:
@@ -321,17 +326,17 @@ class PseudoInterpreter(PseudoVisitor):
                     ctx.start.column,
                     ctx.op.text,
                     type(left_value.__name__, type(right_value).__name__),
+                    source_file
                 )
 
         elif ctx.op and ctx.op.type == PseudoParser.NOT:
             value = self.visit(ctx.expr(0))['value']
+            col = ctx.expr(0).start.column
             if isinstance(value, bool):
                 value = not value
                 return {"type": 'boolean', "value": value}
             else:
-                raise Exception(
-                    f"Error in line: {ctx.start.line}, column: {ctx.start.column}: this value is not boolean."
-                )
+                throw_bool_op_with_another_type_exception(ctx.start.line, col)
 
         elif ctx.op and ctx.op.type == PseudoParser.GREATER:
             left_value = self.visit(ctx.expr(0))['value']
@@ -348,6 +353,7 @@ class PseudoInterpreter(PseudoVisitor):
                     ctx.op.text,
                     type(left_value).__name__,
                     type(right_value).__name__,
+                    source_file
                 )
 
         elif ctx.op and ctx.op.type == PseudoParser.GREATEREQUAL:
@@ -365,6 +371,7 @@ class PseudoInterpreter(PseudoVisitor):
                     ctx.op.text,
                     type(left_value).__name__,
                     type(right_value).__name__,
+                    source_file
                 )
 
         elif ctx.op and ctx.op.type == PseudoParser.SMALLER:
@@ -382,6 +389,7 @@ class PseudoInterpreter(PseudoVisitor):
                     ctx.op.text,
                     type(left_value).__name__,
                     type(right_value).__name__,
+                    source_file
                 )
 
         elif ctx.op and ctx.op.type == PseudoParser.SMALLEREQUAL:
@@ -399,6 +407,7 @@ class PseudoInterpreter(PseudoVisitor):
                     ctx.op.text,
                     type(left_value).__name__,
                     type(right_value).__name__,
+                    source_file
                 )
 
         elif ctx.op and ctx.op.type == PseudoParser.EQUAL:
@@ -416,6 +425,7 @@ class PseudoInterpreter(PseudoVisitor):
                     ctx.op.text,
                     type(left_value).__name__,
                     type(right_value).__name__,
+                    source_file
                 )
 
         elif ctx.op and ctx.op.type == PseudoParser.DIFFERENT:
@@ -429,7 +439,7 @@ class PseudoInterpreter(PseudoVisitor):
 
     def visitAssignmentStatement(self, ctx, jump=None):
         if ctx.parent:
-            if self.currentFrame.isRoot:
+            if self.currentFrame.returnAddress is None:
                 throw_no_parent_scope_exception(ctx.start.line, ctx.start.column)
 
             jump = self.currentFrame if jump is None else jump
@@ -445,6 +455,10 @@ class PseudoInterpreter(PseudoVisitor):
                 if self.currentFrame.check_var(var_id)
                 else self.globalVariables
             )
+
+            if not currentVariablesStoringObject.check_var(var_id):
+                known_names = self.currentFrame.get_all_identifiers()
+                throw_undefined_name_exception(ctx.start.line, ctx.start.column, var_id, known_names)
 
             var_type = currentVariablesStoringObject.get_var(var_id)["type"]
 
@@ -649,7 +663,9 @@ class PseudoInterpreter(PseudoVisitor):
         args = []
         if ctx.argumentList():
             for expr_ctx in ctx.argumentList().expr():
-                args.append(self.visit(expr_ctx))
+                value = self.visit(expr_ctx)
+                column = expr_ctx.start.column
+                args.append((value, column))
 
         try:
             newStackFrame = StackFrame(returnAddress=self.currentFrame)
@@ -659,19 +675,24 @@ class PseudoInterpreter(PseudoVisitor):
             self.call_function(name, args, ctx)
 
             if self.functions.get_fun(name)["return_type"] != "void":
-                raise Exception("Error: Function doesnt return value, but it should.")
+                line = self.functions.get_fun(name)['decl_line']
+                col = self.functions.get_fun(name)['return_type_col']
+                throw_function_doesnt_return_exception(line, col)
 
         except ReturnException as ret:
             if self.functions.get_fun(name)["return_type"] == "void":
-                raise Exception("Error: Void functions cannot return values.")
+                line = self.functions.get_fun(name)['decl_line']
+                col = self.functions.get_fun(name)['return_type_col']
+                throw_void_function_returns_exception(line, col)
 
             return_type = self.functions.get_fun(name)["return_type"]
             if not isinstance(ret.value['value'], types_map[return_type]):
-                raise Exception(
-                    "Error: Returned value doesnt match with declared in function."
-                )
+                line = self.functions.get_fun(name)['decl_line']
+                col = self.functions.get_fun(name)['return_type_col']
+                throw_function_returns_types_dont_match_exception(line, col)
             return ret.value
-        except Exception as e:
+        
+        except Exception:
             raise
         finally:
             self.stack.pop()
@@ -692,21 +713,27 @@ class PseudoInterpreter(PseudoVisitor):
             throw_wrong_parameters_number_exception(ctx.start.line, ctx.start.column, name, len(args), len(func["params"]))
 
         for param, arg in zip(func["params"], args):
+            
+            par_name = param
+            var_type = func["params"][par_name]['type']
+            if arg[0]['type'] != var_type:
+                error_line = ctx.start.line
+                error_col = arg[1]
+                func_def_line = func['decl_line']
+                param_col_in_def = func["params"][par_name]['decl_column']
+                param_type = arg[0]['type']
 
-            var_name = param
-            var_type = func["params"][var_name]
-            if arg['type'] == types_map[var_type]:
-                raise Exception("Error: Wrong parameter type!")
+                throw_wrong_parameter_typw_exception(error_line, error_col, func_def_line, param_col_in_def, var_type, param_type)
 
-            decl_line = ctx.start.line
-            if self.currentFrame.localVariables.check_var(var_name):
-                decl_line = func["decl_line"]
+            decl_line = func["decl_line"]
+            if self.currentFrame.localVariables.check_var(par_name):
+                decl_column = self.currentFrame.localVariables.get_var(par_name)['decl_column']
                 throw_redeclaration_in_function_def_exception(
-                    ctx.start.line, ctx.start.column, var_name, decl_line
+                    ctx.start.line, ctx.start.column, par_name, decl_column
                 )
             else:
                 self.currentFrame.localVariables.set_var(
-                    var_name, arg['value'], decl_line, var_type
+                    par_name, arg[0]['value'], decl_line, var_type
                 )
 
         tree = func["body"]
@@ -723,6 +750,7 @@ class PseudoInterpreter(PseudoVisitor):
         name = ctx.name.text
         return_type = ctx.type_.text
         body = ctx.block
+        type_column = ctx.TYPE().getSymbol().column
 
         if self.functions.check_fun(name):
             decl_line = self.functions.get_fun(name)["decl_line"]
@@ -735,14 +763,17 @@ class PseudoInterpreter(PseudoVisitor):
                 param_name = param_ctx.ID().getText()
                 if param_name in params.keys():
                     column = param_ctx.ID().getSymbol().column
+                    decl_column = params[param_name]['decl_column']
                     throw_redeclaration_in_function_def_exception(
-                        ctx.start.line, column, param_name, ctx.start.line
+                        ctx.start.line, column, param_name, decl_column
                     )
                 else:
-                    params[param_name] = param_type
+                    decl_column = param_ctx.ID().getSymbol().column
+                    params[param_name] = {'type': param_type,
+                                          'decl_column': decl_column}
 
         self.functions.set_fun(
-            name, return_type, params, body, ctx.start.line
+            name, return_type, params, body, ctx.start.line, type_column
         )
 
     def visitContinueStatement(self, ctx):
@@ -793,6 +824,8 @@ def run_interpreter(inputStream=None, filename = "program.pseudo"):
             if inputStream
             else FileStream(filename, encoding="utf-8")
         )
+        config.source_file_name = filename
+
         lexer = PseudoLexer(inputStream)
         stream = CommonTokenStream(lexer)
         parser = PseudoParser(stream)

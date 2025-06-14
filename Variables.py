@@ -8,11 +8,12 @@ class Variables:
         else:
             raise NameError(f"Variable '{var_name}' not found")
 
-    def set_var(self, var_name, value, decl_line=None, type=None):
+    def set_var(self, var_name, value, decl_line=None, type=None, decl_column=None):
         self.__localVariables[var_name] = {
             "value": value,
             "type": type if type is not None else "unknown",
             "decl_line": decl_line if decl_line is not None else -1,
+            "decl_column": decl_column if decl_column is not None else -1
         }
 
     def check_var(self, var_name):

@@ -4,7 +4,7 @@ from PseudoExceptions import (
     )
 
 class StackFrame:
-    def __init__(self, returnAddress = None, isRoot = False):
+    def __init__(self, returnAddress = None, isRoot = False, source_file=None):
         self.localVariables = Variables()
         self.returnAddress: StackFrame = returnAddress
         self.isRoot = isRoot
@@ -12,7 +12,7 @@ class StackFrame:
     def check_var(self, var_id):
         if self.localVariables.check_var(var_id):
             return True
-        elif not self.isRoot and self.returnAddress.check_var(var_id):
+        elif (not self.isRoot) and self.returnAddress.check_var(var_id):
             return True
         else:
             return False
@@ -31,8 +31,8 @@ class StackFrame:
         else:
             throw_undefined_name_exception(-1,-1, var_name)
     
-    def set_var(self, var_name, value, decl_line=None, type=None):
-        self.localVariables.set_var(var_name, value, decl_line, type)
+    def set_var(self, var_name, value, decl_line=None, type=None, decl_column=None):
+        self.localVariables.set_var(var_name, value, decl_line, type, decl_column)
 
     def get_all_identifiers(self):
         if self.isRoot:

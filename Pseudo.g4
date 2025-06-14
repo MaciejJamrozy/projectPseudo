@@ -1,6 +1,6 @@
 grammar Pseudo;
 
-program: (((functionDef | statement) ';') | (codeBlock))* EOF;
+program: (((functionDef | statement | expr) ';') | (codeBlock))* EOF;
 
 statement:
 	printStatement

@@ -1,35 +1,42 @@
-name: Build Executables
+name: Build executable
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    tags:
+      - 'v*'  # działa tylko po wypchnięciu taga np. v1.0
 
 jobs:
   build:
-    name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-      - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.11
 
-      - name: Install dependencies
-        run: pip install pyinstaller
+    - name: Install PyInstaller
+      run: pip install pyinstaller
 
-      - name: Build executable
-        run: pyinstaller --onefile PseudoInterpreter.py
+    - name: Build executable
+      run: pyinstaller --onefile pseudoInterpreter.py
 
-      - name: Upload executable
-        uses: actions/upload-artifact@v4
-        with:
-          name: executable-${{ matrix.os }}
-          path: dist/*
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: pseudoInterpreter-${{ runner.os }}
+        path: dist/pseudoInterpreter
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: dist/pseudoInterpreter
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
