@@ -11,15 +11,14 @@ import config
 import sys
 from PseudoExceptions import *
 
-source_file = None
 class PseudoInterpreter(PseudoVisitor):
-    def __init__(self, initialStackFrame: StackFrame, functions: Functions = None, globalVariables = None):
+    def __init__(self):
         self.inFunctionCall = False
         self.stack: Stack[StackFrame] = Stack()
-        self.stack.push(initialStackFrame)
-        self.functions = functions
-        self.globalVariables: Variables = globalVariables
-        self.currentFrame: StackFrame = initialStackFrame
+        self.functions = Functions()
+        self.globalVariables: Variables = Variables()
+        self.currentFrame: StackFrame = StackFrame(isRoot=True)
+        self.stack.push(self.currentFrame)
 
     def visitVarDeclStatement(self, ctx: PseudoParser.VarDeclStatementContext):
         value_dict = None
@@ -835,16 +834,7 @@ def run_interpreter(inputStream=None, filename = "program.pseudo"):
 
         tree = parser.program()
 
-        initialStackFrame = StackFrame(
-            isRoot=True
-        )
-
-        functions = Functions()
-        globalVariables = Variables()
-
-        interpreter = PseudoInterpreter(
-            initialStackFrame=initialStackFrame, functions=functions, globalVariables=globalVariables
-        )
+        interpreter = PseudoInterpreter()
 
         interpreter.visit(tree)
 
