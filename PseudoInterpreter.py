@@ -169,8 +169,7 @@ class PseudoInterpreter(PseudoVisitor):
                         ctx.start.column,
                         ctx.op.text,
                         type(left_value).__name__,
-                        type(right_value).__name__,
-                        source_file
+                        type(right_value).__name__
                     )
 
         elif ctx.op and ctx.op.type == PseudoParser.MINUS:
@@ -197,8 +196,7 @@ class PseudoInterpreter(PseudoVisitor):
                         ctx.start.column,
                         ctx.op.text,
                         type(left_value).__name__,
-                        type(right_value).__name__,
-                        source_file
+                        type(right_value).__name__
                     )
 
             else:
@@ -208,8 +206,7 @@ class PseudoInterpreter(PseudoVisitor):
                         ctx.start.column,
                         ctx.op.text,
                         type(left_value).__name__,
-                        "int/float",
-                        source_file
+                        "int/float"
                     )
                 
                 type = None
@@ -240,7 +237,6 @@ class PseudoInterpreter(PseudoVisitor):
                     ctx.op.text,
                     type(left_value).__name__,
                     type(right_value).__name__,
-                    source_file
                 )
 
         elif ctx.op and ctx.op.type == PseudoParser.DIV:
@@ -270,8 +266,7 @@ class PseudoInterpreter(PseudoVisitor):
                     ctx.start.column,
                     ctx.op.text,
                     type(left_value).__name__,
-                    type(right_value).__name__,
-                    source_file
+                    type(right_value).__name__
                 )
 
         elif ctx.op and ctx.op.type == PseudoParser.INTDIV:
@@ -294,8 +289,7 @@ class PseudoInterpreter(PseudoVisitor):
                     ctx.start.column,
                     ctx.op.text,
                     type(left_value).__name__,
-                    type(right_value).__name__,
-                    source_file
+                    type(right_value).__name__
                 )
 
         elif ctx.op and ctx.op.type == PseudoParser.AND:
@@ -309,8 +303,7 @@ class PseudoInterpreter(PseudoVisitor):
                     ctx.start.line,
                     ctx.start.column,
                     ctx.op.text,
-                    type(left_value.__name__, type(right_value).__name__),
-                    source_file
+                    type(left_value.__name__, type(right_value).__name__)
                 )
 
         elif ctx.op and ctx.op.type == PseudoParser.OR:
@@ -324,8 +317,7 @@ class PseudoInterpreter(PseudoVisitor):
                     ctx.start.line,
                     ctx.start.column,
                     ctx.op.text,
-                    type(left_value.__name__, type(right_value).__name__),
-                    source_file
+                    type(left_value.__name__, type(right_value).__name__)
                 )
 
         elif ctx.op and ctx.op.type == PseudoParser.NOT:
@@ -351,8 +343,7 @@ class PseudoInterpreter(PseudoVisitor):
                     ctx.start.column,
                     ctx.op.text,
                     type(left_value).__name__,
-                    type(right_value).__name__,
-                    source_file
+                    type(right_value).__name__
                 )
 
         elif ctx.op and ctx.op.type == PseudoParser.GREATEREQUAL:
@@ -369,8 +360,7 @@ class PseudoInterpreter(PseudoVisitor):
                     ctx.start.column,
                     ctx.op.text,
                     type(left_value).__name__,
-                    type(right_value).__name__,
-                    source_file
+                    type(right_value).__name__
                 )
 
         elif ctx.op and ctx.op.type == PseudoParser.SMALLER:
@@ -387,8 +377,7 @@ class PseudoInterpreter(PseudoVisitor):
                     ctx.start.column,
                     ctx.op.text,
                     type(left_value).__name__,
-                    type(right_value).__name__,
-                    source_file
+                    type(right_value).__name__
                 )
 
         elif ctx.op and ctx.op.type == PseudoParser.SMALLEREQUAL:
@@ -405,8 +394,7 @@ class PseudoInterpreter(PseudoVisitor):
                     ctx.start.column,
                     ctx.op.text,
                     type(left_value).__name__,
-                    type(right_value).__name__,
-                    source_file
+                    type(right_value).__name__
                 )
 
         elif ctx.op and ctx.op.type == PseudoParser.EQUAL:
@@ -423,8 +411,7 @@ class PseudoInterpreter(PseudoVisitor):
                     ctx.start.column,
                     ctx.op.text,
                     type(left_value).__name__,
-                    type(right_value).__name__,
-                    source_file
+                    type(right_value).__name__
                 )
 
         elif ctx.op and ctx.op.type == PseudoParser.DIFFERENT:
