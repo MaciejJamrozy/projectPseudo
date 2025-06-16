@@ -36,10 +36,23 @@ jobs:
         name: pseudoInterpreter-${{ runner.os }}
         path: dist/PseudoInterpreter*
 
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
+    - name: List downloaded files
+      run: ls -R artifacts
+
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: dist/PseudoInterpreter*
+        files: artifacts/**/*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
