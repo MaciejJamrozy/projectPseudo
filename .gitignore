@@ -1,14 +1,10 @@
 __pycache__/
 .antlr/
-PseudoParser.py
 program.pseudo
 Pseudo.interp
 Pseudo.tokens
 PseudoLexer.interp
-PseudoLexer.py
 PseudoLexer.tokens
-PseudoListener.py
-PseudoVisitor.py
 command.txt
 *.pseudo
 .DS_Store
