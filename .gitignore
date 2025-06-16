@@ -1,5 +1,4 @@
 __pycache__/
-.antlr/
 program.pseudo
 Pseudo.interp
 Pseudo.tokens
@@ -13,5 +12,3 @@ tests/__pycache__/
 tests/.pytest_cache/
 venv/
 build
-dist
-pseudoInterpreter.spec
