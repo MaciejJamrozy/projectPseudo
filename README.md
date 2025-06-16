@@ -26,7 +26,7 @@
 - [Podsumowanie](#podsumowanie)
 
 ## Wstęp
-Język `Pseudo` został zaprojektowany jako ogólny język programowania, szczególnie przydatny do prototypowania algorytmów. Łączy prostotę pseudokodu z elastyczną składnią i silnym typowaniem, dzięki czemu jest odpowiedni zarówno dla początkujących, jak i zaawansowanych programistów.
+Język `Pseudo` został zaprojektowany jako ogólny język programowania, szczególnie przydatny do prototypowania algorytmów. Łączy prostotę pseudokodu z elastyczną składnią i silnym typowaniem, dzięki czemu jest odpowiedni zarówno dla początkujących, jak i bardziej zaawansowanych programistów.
 
 ## Instalacja i uruchomienie
 1. Sklonuj repozytorium:
