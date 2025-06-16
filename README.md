@@ -1,195 +1,208 @@
-# Dokumentacja Techniczna Języka Programowania Pseudo
+# Dokumentacja dla użytkownika końcowego: Język Pseudo
 
-## Wprowadzenie
+**Autorzy**: Maciej Jamroży, Robert Jacak, Kacper Gałek  
+**Data**: Czerwiec 2025  
 
-Pseudo++ to niestandardowy język programowania stworzony z myślą o prostocie składni oraz solidnych podstawach, odpowiednich zarówno do celów edukacyjnych, jak i małych projektów. Język wspiera podstawowe konstrukcje programistyczne, takie jak deklaracje zmiennych, struktury sterujące (`if`, `while`, `for`) oraz definicje funkcji, kładąc szczególny nacisk na bezpieczeństwo typów i obsługę błędów.
+## Spis treści
+- [Wstęp](#wstęp)
+- [Instalacja i uruchomienie](#instalacja-i-uruchomienie)
+- [Hello World](#hello-world)
+- [Podstawowe cechy języka](#podstawowe-cechy-języka)
+  - [Typy podstawowe](#typy-podstawowe)
+  - [Deklaracja i przypisanie zmiennych](#deklaracja-i-przypisanie-zmiennych)
+  - [Konwersje typów](#konwersje-typów)
+  - [Zakresy i widoczność zmiennych (Scope)](#zakresy-i-widoczność-zmiennych-scope)
+    - [Zakres globalny i lokalny](#zakres-globalny-i-lokalny)
+    - [Shadowing – przesłanianie zmiennych](#shadowing--przesłanianie-zmiennych)
+  - [Instrukcje sterujące](#instrukcje-sterujące)
+    - [if](#if)
+    - [Pętla while](#pętla-while)
+    - [Pętla for](#pętla-for)
+  - [Funkcje](#funkcje)
+  - [Przykłady zaawansowane](#przykłady-zaawansowane)
+    - [Rekurencja](#reakurencja)
+    - [Tabliczka mnożenia](#tabliczka-mnożenia)
+  - [Wyświetlanie błędów](#wyświetlanie-błędów)
+- [Podsumowanie](#podsumowanie)
 
-Dokumentacja ta ma na celu zapewnienie pełnego przeglądu języka Pseudo, obejmującego jego cechy, składnię, semantykę, kluczowe komponenty, sposób użycia, obsługę błędów oraz praktyczne przykłady.
+## Wstęp
+Język `Pseudo` został zaprojektowany jako ogólny język programowania, szczególnie przydatny do prototypowania algorytmów. Łączy prostotę pseudokodu z elastyczną składnią i silnym typowaniem, dzięki czemu jest odpowiedni zarówno dla początkujących, jak i zaawansowanych programistów.
 
-## Spis Treści
-
-- [Instalacja](#instalacja)
-- [Cechy Języka](#cechy-języka)
-- [Składnia](#składnia)
-- [Semantyka](#semantyka)
-- [Kluczowe Komponenty](#kluczowe-komponenty)
-- [Użycie](#użycie)
-- [Obsługa Błędów](#obsługa-błędów)
-- [Przykłady](#przykłady)
-
-## Instalacja
-
-Aby uruchomić interpreter Pseudo, należy zainstalować następujące zależności:
-
-- **Python 3.x**: Język bazowy dla interpretera.
-- **ANTLR4**: Biblioteka do parsowania składni (wymagana wersja `antlr4-python3-runtime`).
-
-### Kroki instalacji:
-
+## Instalacja i uruchomienie
 1. Sklonuj repozytorium:
    ```bash
-   git clone https://github.com/yourusername/pseudo.git
-   cd pseudo
+   git clone https://github.com/MaciejJamrozy/projectPseudo.git
    ```
-2. Zainstaluj wymagane pakiety:
+2. Zainstaluj zależności:
    ```bash
-   pip install antlr4-python3-runtime
+   pip install -r requirements.txt
    ```
-3. Upewnij się, że pliki `Pseudo.g4`, `PseudoInterpreter.py`, `Listener.py`, `Memory.py` oraz `PseudoExceptions.py` są dostępne w katalogu roboczym.
-
-## Cechy Języka
-
-Pseudo oferuje następujące funkcjonalności:
-
-- **Bezpieczeństwo typów**: Zmienne muszą być deklarowane z określonym typem (`int`, `float`, `string`, `boolean`).
-- **Struktury sterujące**: Obsługuje instrukcje `if`, `while` oraz `for`.
-- **Funkcje**: Umożliwia definiowanie i wywoływanie niestandardowych funkcji.
-- **Wejście/Wyjście**: Zawiera polecenia `print`/`shout` do wyświetlania danych oraz `input`/`scan`/`listen` do pobierania danych od użytkownika.
-- **Obsługa błędów**: Dedykowane wyjątki dla niezgodności typów, niezadeklarowanych zmiennych i niewłaściwego użycia operatorów.
-
-## Składnia
-
-Składnia Pseudo jest zdefiniowana w pliku gramatyki `Pseudo.g4` przy użyciu ANTLR4. Poniżej przedstawiono kluczowe reguły składniowe.
-
-### Struktura programu
-
-- **`program`**: Sekwencja instrukcji zakończona znacznikiem końca pliku (EOF).
-
-### Instrukcje (`statement`)
-
-- **Deklaracja zmiennej**: `typ ID = expr ;`
-- **Przypisanie**: `ID = expr ;`
-- **Wyświetlanie**: `print(expr) ;` lub `shout(expr) ;`
-- **Warunek**: `if (expr) : statement* end if ;`
-- **Pętla while**: `while (expr) : statement* end loop ;`
-- **Pętla for**: `for (typ ID = expr ; expr ; ID = expr) : statement* end loop ;`
-- **Definicja funkcji**: (szczegóły w sekcji poniżej)
-
-### Wyrażenia (`expr`)
-
-- **Literały**: Liczby (`NUMBER`), ciągi znaków (`STRING`), wartości logiczne (`BOOL`).
-- **Operatory arytmetyczne**: `+`, `-`, `*`, `/`.
-- **Operatory porównania**: `>`, `<`, `>=`, `<=`, `==`, `!=`.
-- **Operatory logiczne**: `&&`, `||`, `!`.
-
-### Przykłady składni
-
-1. Deklaracja i wyświetlenie:
-   ```pseudo
-   int x = 5;
-   print(x);
-   ```
-2. Warunek:
-   ```pseudo
-   string msg = "Hello";
-   if (x > 0) : print(msg); end if;
-   ```
-3. Pętla for:
-   ```pseudo
-   for (int i = 0; i < 5; i = i + 1) : print(i); end loop;
-   ```
-
-## Semantyka
-
-### Ewaluacja wyrażeń
-
-Interpreter Pseudo (`PseudoInterpreter.py`) używa wzorca wizytatora do przetwarzania drzewa parsowania. Wyrażenia są oceniane zgodnie z typami operandów:
-
-- **Arytmetyka**: Operacje są dozwolone tylko między zgodnymi typami (np. `int + int`, `float + float`).
-- **Porównania**: Zwracają wartości logiczne (`boolean`).
-- **Logika**: Operatory `&&`, `||`, `!` działają na wartościach `boolean`.
-
-### Struktury sterujące
-
-- **If**: Wykonuje blok kodu, jeśli warunek jest prawdziwy.
-- **While**: Powtarza blok kodu, dopóki warunek jest prawdziwy.
-- **For**: Inicjalizuje zmienną, sprawdza warunek i aktualizuje zmienną w każdej iteracji.
-
-### System typów
-
-- Typy są statycznie sprawdzane podczas deklaracji i przypisania.
-- Niedozwolone są operacje między niezgodnymi typami (np. `int + string` powoduje wyjątek).
-
-## Kluczowe Komponenty
-
-### 1. Lexer i Parser (`Pseudo.g4`)
-
-- Definiuje tokeny (np. `ID`, `NUMBER`, `STRING`, `BOOL`) i reguły gramatyczne.
-- Generuje drzewo parsowania na podstawie kodu źródłowego.
-
-### 2. Interpreter (`PseudoInterpreter.py`)
-
-- Implementuje wzorzec wizytatora do ewaluacji drzewa parsowania.
-- Obsługuje zarządzanie zmiennymi, ewaluację wyrażeń i struktury sterujące.
-- Wprowadza przeciążanie operatorów w zależności od typów operandów.
-
-### 3. Listener (`Listener.py`)
-
-- Nasłuchuje zdarzeń drzewa parsowania, zarządzając deklaracjami i inicjalizacjami zmiennych.
-- Wymusza ograniczenia typów podczas deklaracji.
-
-### 4. Pamięć (`Memory.py`)
-
-- Przechowuje zmienne w słowniku, śledząc ich wartości i typy.
-
-### 5. Wyjątki (`PseudoExceptions.py`)
-
-- Definiuje niestandardowe wyjątki dla błędów runtime, takie jak:
-  - `throw_var_redeclaration_exception`
-  - `throw_wrong_type_exception`
-  - `throw_undefined_name_exception`
-  - `throw_unknown_operator_exception`
-
-## Użycie
-
-1. Napisz kod w pliku (np. `program.pseudo`).
-2. Uruchom interpreter:
+3. Sprawdź, że w katalogu są pliki:
+   - `Pseudo.g4`
+   - `PseudoInterpreter.py`
+   - `Stack.py`
+   - `StackFrame.py`
+   - `Functions.py`
+   - `Variables.py`
+   - `PseudoExceptions.py`
+4. Uruchom interpreter:
    ```bash
-   python PseudoInterpreter.py
+   python3 PseudoInterpreter.py program.pseudo
    ```
-3. Interpreter odczyta plik, wykona kod i wyświetli wyniki lub komunikaty o błędach.
 
-## Obsługa Błędów
+## Hello World
+Najprostszy program:
+```pseudo
+print("Hello, world!");
+```
+Wynik:
+> Hello, world!
 
-Pseudo implementuje solidny system obsługi błędów:
+## Podstawowe cechy języka
 
-- **Ponowna deklaracja zmiennej**: Wywołuje `throw_var_redeclaration_exception`, jeśli zmienna jest zadeklarowana więcej niż raz.
-- **Niezgodność typów**: Wywołuje `throw_wrong_type_exception`, jeśli operacja lub przypisanie narusza reguły typów.
-- **Niezdefiniowana nazwa**: Wywołuje `throw_undefined_name_exception`, jeśli użyto niezadeklarowanej zmiennej.
-- **Nieznany operator**: Wywołuje `throw_unknown_operator_exception`, jeśli operator nie jest zgodny z typami operandów.
+### Typy podstawowe
+Silnie i statycznie typowany język. Dostępne typy:
+- `int` – liczby całkowite (np. `-42`, `0`, `123`)
+- `float` – liczby zmiennoprzecinkowe (np. `3.14`, `-0.001`)
+- `string` – ciągi znaków w pojedynczych lub podwójnych cudzysłowach
+- `boolean` – wartości logiczne `True` i `False`
 
-## Przykłady
+### Deklaracja i przypisanie zmiennych
+Możesz używać różnych operatorów:
+- `=` (standardowo): `int x = 5;`
+- `is`: `float pi is 3.14;`
+- `<<`: `string s << "foo";`
+- `<-`: `boolean flag <- True;`
 
-### Przykład 1: Deklaracja zmiennej
+### Konwersje typów
+Wbudowane rzutowania:
+- `int(expr)` – np. `int("123") → 123`
+- `float(expr)` – np. `float("3.14") → 3.14`
+- `string(expr)` – np. `string(42) → "42"`
+- `boolean(expr)` – traktuje 0/False jako `False`, inne jako `True`
+
+### Zakresy i widoczność zmiennych (Scope)
+Każdy program napisany w języku Pseudo działa w tzw. **zakresach** (ang. *scopes*), które definiują, gdzie dana zmienna jest widoczna i dostępna. Dzięki temu można tworzyć bezpieczne funkcje, które nie wpływają przypadkowo na zmienne z innych części programu.
+
+#### Zakres globalny i lokalny
+- **Globalny zakres** – każda zmienna zadeklarowana poza funkcją lub blokiem (np. pętlą) należy do zakresu globalnego i może być dostępna z każdego miejsca w programie.
+- **Lokalny zakres** – każda zmienna zadeklarowana wewnątrz funkcji lub bloku (np. w pętli) istnieje tylko w tym i zagnieżdzonych zakresach, nie wpływając na zmienne o tej samej nazwie poza tym zakresem. Można się do niej odwołać z zagnieżdżonego bloku poprzez wyrażenie: `parent::`
+
+#### Shadowing – przesłanianie zmiennych
+Jeśli wewnątrz funkcji lub pętli utworzysz zmienną o tej samej nazwie, co istniejąca zmienna globalna lub zmienna z wyższego scope, lokalna wartość ją **przesłania**. Przykład:
 
 ```pseudo
-int count = 10;
-print(count);
+global int x = 10;
+function void test():
+    int x = 6;
+    {
+    int x = 5;
+    print(x); // wypisze 5 - lokalna zmienna
+    print(parent::x) // wypisze 6 - wyższy scope
+    print(parent::parent::x) // wypisze 10 - globalna
+    }
+end function;
+test();
+print(x); // wypisze 10 - globalna zmienna
 ```
 
-**Wynik**: `10`
+### Instrukcje sterujące
 
-### Przykład 2: Instrukcja if
+#### if
+```pseudo
+if x > 0:
+    print("Plus");
+elseif x == 0 then
+    print("Zero");
+else:
+    print("Minus");
+end if;
+```
+
+#### Pętla while
+```pseudo
+while (i < 10):
+    shout(i);
+    i = i + 1;
+end loop;
+```
+
+#### Pętla for
+```pseudo
+for (int i = 0; i < 5; i = i + 1):
+    print(i);
+end loop;
+```
+
+### Funkcje
+Definicje funkcji można tworzyć z użyciem różnych aliasów: `function`, `fun` oraz `def`. Każdy z nich jest równoważny i może być użyty zamiennie.
 
 ```pseudo
-int x = 5;
-if (x > 0) : print("Positive"); end if;
+function int max(int a, int b):
+    if a > b:
+        return a;
+    else:
+        return b;
+    end if;
+end function;
 ```
-
-**Wynik**: `Positive`
-
-### Przykład 3: Pętla for
+Wywołanie: `int m = max(10, 20);`
 
 ```pseudo
-for (int i = 0; i < 5; i = i + 1) : print(i); end loop;
+fun boolean even(boolean n):
+    return n;
+end fun;
+```
+Wywołanie: `boolean b = even(True);`
+
+```pseudo
+def string greet(string name):
+    return name;
+end def;
+```
+Wywołanie: `string msg = greet("Hello");`
+
+**Uwaga:** Każda funkcja musi kończyć się słowem kluczowym `end function`, `end fun` lub `end def`, odpowiednio do użytego aliasu na początku. Zachowanie spójności aliasu na początku i końcu definicji jest obowiązkowe.
+
+### Przykłady zaawansowane
+
+#### Rekurencja
+```pseudo
+function int factorial(int n):
+    if n <= 1: 
+        return 1; 
+    end if;
+    return n * factorial(n - 1);
+end function;
+print(factorial(5)); // 120
 ```
 
-**Wynik**:
+#### Tabliczka mnożenia
+```pseudo
+for (int i = 1; i <= 10; i = i + 1):
+    for (int j = 1; j <= 10; j = j + 1):
+        print(i + " * " + j + " = " + (i * j));
+    end loop;
+end loop;
+```
 
+### Wyświetlanie błędów
+Dodano bardziej czytelny i precyzyjny system raportowania błędów, który wskazuje dokładne miejsce wystąpienia problemu w kodzie. Komunikaty zawierają m.in. numer linii, kolumny oraz szczegółowy opis błędu, co znacznie ułatwia debugowanie.
+
+Przykład błędu dla wielokrotnej deklaracji tego samego argumentu w definicji funkcji:
+
+```pseudo
+def void foo(int c, float c):
+                          ^
+Error in line: 1, column 26: argument 'c' was already declared at column 17, in this function definition.
 ```
-0
-1
-2
-3
-4
-```
+
+**Zalety nowego systemu błędów:**
+- Precyzyjne wskazanie linii i kolumny wystąpienia błędu.
+- Opis błędu zawierający lokalizację poprzedniego konfliktu (np. wcześniejszej deklaracji).
+- Lepsze zrozumienie błędów składniowych i semantycznych.
+
+Dzięki temu programista może szybciej identyfikować i poprawiać błędy, zwłaszcza w bardziej złożonych definicjach funkcji czy struktur.
+
+## Podsumowanie
+`Pseudo` to elastyczny język edukacyjny, łączący prostotę pseudokodu z realnym wykonaniem. Oferuje rozbudowane instrukcje sterujące, silne typowanie i czytelną obsługę błędów.
