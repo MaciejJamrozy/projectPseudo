@@ -3,7 +3,7 @@ name: Build executable
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*'  # np. v1.0, v1.1 itd.
 
 jobs:
   build:
@@ -30,29 +30,23 @@ jobs:
     - name: Build executable
       run: pyinstaller --onefile --hidden-import=antlr4 PseudoInterpreter.py
 
+    - name: Rename binary to include OS
+      run: |
+        EXT=""
+        if [[ "${{ runner.os }}" == "Windows" ]]; then EXT=".exe"; fi
+        mv dist/PseudoInterpreter dist/PseudoInterpreter-${{ runner.os }}$EXT
+      shell: bash
+
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: pseudoInterpreter-${{ runner.os }}
-        path: dist/PseudoInterpreter*
+        path: dist/PseudoInterpreter-${{ runner.os }}*
 
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Download all artifacts
-      uses: actions/download-artifact@v4
-      with:
-        path: artifacts
-
-    - name: List downloaded files
-      run: ls -R artifacts
-
-    - name: Create GitHub Release
+    - name: Upload to GitHub Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: artifacts/**/*
+        files: dist/PseudoInterpreter-*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
