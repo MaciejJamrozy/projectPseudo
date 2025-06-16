@@ -206,3 +206,4 @@ Dzięki temu programista może szybciej identyfikować i poprawiać błędy, zw�
 
 ## Podsumowanie
 `Pseudo` to elastyczny język edukacyjny, łączący prostotę pseudokodu z realnym wykonaniem. Oferuje rozbudowane instrukcje sterujące, silne typowanie i czytelną obsługę błędów.
+
