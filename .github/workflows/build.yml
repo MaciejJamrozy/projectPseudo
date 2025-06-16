@@ -28,7 +28,7 @@ jobs:
       run: pip install pyinstaller
 
     - name: Build executable
-      run: pyinstaller --onefile --hidden-import=antlr4 pseudoInterpreter.py
+      run: pyinstaller --onefile --hidden-import=antlr4 PseudoInterpreter.py
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
