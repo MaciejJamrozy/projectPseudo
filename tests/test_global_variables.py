@@ -72,15 +72,6 @@ def test_assign_boolean_to_string_should_fail(capsys):
     captured = capsys.readouterr().out.lower()
     assert "error" in captured
 
-def test_assign_float_to_int_should_fail(capsys):
-    code = """
-    global int ala = 1;
-    ala = 3.5;
-    """
-    input_stream = InputStream(code)
-    run_interpreter(inputStream=input_stream)
-    captured = capsys.readouterr().out.lower()
-    assert "error" in captured
 
 
 import pytest

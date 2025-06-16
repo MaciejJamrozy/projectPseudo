@@ -56,12 +56,16 @@ class PseudoInterpreter(PseudoVisitor):
                 elif var_type == "int":
                     if value_type == "int":
                         pass
+                    elif value_type == "float":
+                        value_dict['value'] = int(value_dict['value'])
                     else:
                         raise ValueError("Expected int")
 
                 elif var_type == "float":
                     if value_type == "float":
                         pass
+                    elif value_type == "int":
+                        value_dict['value'] = float(value_dict['value'])
                     else:
                         raise ValueError("Expected float")
 
@@ -492,12 +496,16 @@ class PseudoInterpreter(PseudoVisitor):
                     elif var_type == "int":
                         if value_type == "int":
                             pass
+                        elif value_type == "float":
+                            value['value'] = int(value['value'])
                         else:
                             raise ValueError("Expected int")
 
                     elif var_type == "float":
                         if value_type == "float":
                             pass
+                        elif value_type == "int":
+                            value['value'] = float(value['value'])
                         else:
                             raise ValueError("Expected float")
 
