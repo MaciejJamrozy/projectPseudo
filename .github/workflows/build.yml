@@ -3,7 +3,7 @@ name: Build executable
 on:
   push:
     tags:
-      - 'v*'  # np. v1.0, v1.1 itd.
+      - 'v*'  # działa po wypchnięciu taga np. v1.0
 
 jobs:
   build:
@@ -13,40 +13,53 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: 3.11
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
 
-    - name: Install dependencies
-      run: pip install -r requirements.txt
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
-    - name: Install PyInstaller
-      run: pip install pyinstaller
+      - name: Install PyInstaller
+        run: pip install pyinstaller
 
-    - name: Build executable
-      run: pyinstaller --onefile --hidden-import=antlr4 PseudoInterpreter.py
+      - name: Build executable
+        run: pyinstaller --onefile --hidden-import=antlr4 PseudoInterpreter.py
 
-    - name: Rename binary to include OS
-      run: |
-        EXT=""
-        if [[ "${{ runner.os }}" == "Windows" ]]; then EXT=".exe"; fi
-        mv dist/PseudoInterpreter dist/PseudoInterpreter-${{ runner.os }}$EXT
-      shell: bash
+      - name: Make binary executable (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: chmod +x dist/PseudoInterpreter
 
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: pseudoInterpreter-${{ runner.os }}
-        path: dist/PseudoInterpreter-${{ runner.os }}*
+      - name: Rename binary to include OS
+        shell: bash
+        run: |
+          EXT=""
+          if [[ "${{ runner.os }}" == "Windows" ]]; then EXT=".exe"; fi
+          mv dist/PseudoInterpreter dist/PseudoInterpreter-${{ runner.os }}$EXT
 
-    - name: Upload to GitHub Release
-      uses: softprops/action-gh-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        files: dist/PseudoInterpreter-*
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pseudoInterpreter-${{ runner.os }}
+          path: dist/PseudoInterpreter-${{ runner.os }}*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/**/*  # pobiera wszystkie pliki z artifacts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
